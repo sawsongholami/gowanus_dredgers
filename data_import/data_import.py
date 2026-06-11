@@ -5,12 +5,11 @@ import requests
 
 dir_project = pl.Path(__file__).parent.parent.absolute()
 dir_data = dir_project / 'data'
-dir_wqm_pdfs = dir_data / 'wqm_pdfs'
 dir_wqm_csvs = dir_data / 'wqm_csvs'
+dir_wqm_pdfs = dir_data / 'wqm_pdfs'
 
 
 def get_pdf(url=None, pdf_name=None, url_date=None):
-    # 1. Paste the direct URL of the PDF file here
     url_prefix = 'https://gowanussuperfund.com/wp-content/uploads'
     if url is not None:
         url_final = url
@@ -28,10 +27,10 @@ def get_pdf(url=None, pdf_name=None, url_date=None):
         "Referer": "https://gowanussuperfund.com/",
     }
 
-    # 2. Send a GET request to download the file
+    # Send a GET request to download the file
     response = requests.get(url_final, headers=headers)
 
-    # 3. Save the PDF into your PyCharm project directory
+    # Save the PDF into your PyCharm project directory
     if response.status_code == 200:
         with open(dir_wqm_pdfs / pdf_name, "wb") as file:
             file.write(response.content)
