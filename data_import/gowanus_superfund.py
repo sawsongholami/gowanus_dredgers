@@ -7,6 +7,15 @@ dir_this_data = pl.Path(__file__).parent.parent.absolute() / 'data' / 'gowanus_s
 dir_csv = dir_this_data / 'csv'
 dir_pdf = dir_this_data / 'pdf'
 
+dir_this_data.mkdir(exist_ok=True)
+dir_csv.mkdir(exist_ok=True)
+dir_pdf.mkdir(exist_ok=True)
+
+# PARAMETERS
+pdf_name = 'RTA2-WQM-Weekly-Report_Week-098.pdf'
+url_date = '2026/05'
+first_page_number = 15
+
 
 def get_pdf_from_website(url=None, pdf_name=None, url_date=None):
     url_prefix = 'https://gowanussuperfund.com/wp-content/uploads'
@@ -59,6 +68,5 @@ def pdf_to_csv(pdf_name, first_page_number, column_name_option=0):
 
 
 if __name__ == '__main__':
-    pdf_name = 'RTA2-WQM-Weekly-Report_Week-098.pdf'
-    get_pdf_from_website(pdf_name=pdf_name, url_date='2026/05')
-    pdf_to_csv(pdf_name=pdf_name, first_page_number=15)
+    get_pdf_from_website(pdf_name=pdf_name, url_date=url_date)
+    pdf_to_csv(pdf_name=pdf_name, first_page_number=first_page_number)

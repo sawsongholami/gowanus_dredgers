@@ -3,13 +3,14 @@ import pathlib as pl
 import requests
 
 dir_this_data = pl.Path(__file__).parent.parent.absolute() / 'data' / 'noaa'
+dir_this_data.mkdir(exist_ok=True)
+
+# PARAMETERS
+begin_date = '20260101'  # Dates in YYYYMMDD
+end_date = '20260131'
 
 if __name__ == '__main__':
     url = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter'
-
-    # Dates in YYYYMMDD
-    begin_date = '20260101'
-    end_date = '20260131'
 
     params = {
         'product': 'predictions',
@@ -20,8 +21,8 @@ if __name__ == '__main__':
         'units': 'metric',
         'interval': 'hilo',
         'format': 'json',
-        'begin_date': '20260101',  # CHANGE
-        'end_date': '20260131'  # CHANGE
+        'begin_date': begin_date,
+        'end_date': end_date
     }
 
     response = requests.get(url, params=params)
