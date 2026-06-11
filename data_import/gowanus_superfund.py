@@ -3,13 +3,12 @@ import pathlib as pl
 import pdfplumber
 import requests
 
-dir_project = pl.Path(__file__).parent.parent.absolute()
-dir_data = dir_project / 'data'
-dir_wqm_csvs = dir_data / 'wqm_csvs'
-dir_wqm_pdfs = dir_data / 'wqm_pdfs'
+dir_this_data = pl.Path(__file__).parent.parent.absolute() / 'data' / 'gowanus_superfund'
+dir_csv = dir_this_data / 'csv'
+dir_pdf = dir_this_data / 'pdf'
 
 
-def get_pdf(url=None, pdf_name=None, url_date=None):
+def get_pdf_from_website(url=None, pdf_name=None, url_date=None):
     url_prefix = 'https://gowanussuperfund.com/wp-content/uploads'
     if url is not None:
         url_final = url
@@ -32,7 +31,7 @@ def get_pdf(url=None, pdf_name=None, url_date=None):
 
     # Save the PDF into your PyCharm project directory
     if response.status_code == 200:
-        with open(dir_wqm_pdfs / pdf_name, "wb") as file:
+        with open(dir_pdf / pdf_name, "wb") as file:
             file.write(response.content)
         print("PDF downloaded successfully!")
     else:
@@ -48,7 +47,7 @@ def pdf_to_csv(pdf_name, first_page_number, column_name_option=0):
     }
     csv_name = pdf_name.replace('.pdf', '.csv')
     # Open the PDF
-    with pdfplumber.open(dir_wqm_pdfs / pdf_name) as pdf:
+    with pdfplumber.open(dir_pdf / pdf_name) as pdf:
         first_page = pdf.pages[first_page_number - 1]
 
         # Extract table as a list of lists
@@ -56,10 +55,10 @@ def pdf_to_csv(pdf_name, first_page_number, column_name_option=0):
 
         # Convert to DataFrame
         df = pd.DataFrame(extracted_table[2:], columns=col_options[column_name_option])
-        df.to_csv(dir_wqm_csvs / csv_name, index=False)
+        df.to_csv(dir_csv / csv_name, index=False)
 
 
 if __name__ == '__main__':
     pdf_name = 'RTA2-WQM-Weekly-Report_Week-098.pdf'
-    get_pdf(pdf_name=pdf_name, url_date='2026/05')
+    get_pdf_from_website(pdf_name=pdf_name, url_date='2026/05')
     pdf_to_csv(pdf_name=pdf_name, first_page_number=15)
