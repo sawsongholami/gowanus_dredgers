@@ -9,7 +9,8 @@ dir_this_data.mkdir(exist_ok=True)
 begin_date = '20260101'  # Dates in YYYYMMDD
 end_date = '20260131'
 
-if __name__ == '__main__':
+
+def get_data():
     url = 'https://api.tidesandcurrents.noaa.gov/api/prod/datagetter'
 
     params = {
@@ -34,7 +35,11 @@ if __name__ == '__main__':
     # Parse timestamps and convert tide heights to numeric
     df['t'] = pd.to_datetime(df['t'])
     df['v'] = pd.to_numeric(df['v'])
-
     df = df.rename(columns={'t': 'datetime', 'v': 'prediction_in_meters'})
 
     df.to_csv(dir_this_data / f'tide_predictions_{begin_date}_to_{end_date}.csv', index=False)
+    return df
+
+
+if __name__ == '__main__':
+    get_data()  # TODO
