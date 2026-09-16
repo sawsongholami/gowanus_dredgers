@@ -11,7 +11,13 @@ table in Supabase, combining two sources at load time:
 
 Where both sources have a row for the same date+site, the master wins.
 Both sheets are public ("anyone with the link"), so no credentials are
-needed. Usage:
+needed.
+
+This loader reads the sheets LIVE rather than from disk, deliberately:
+the master sheet is still maintained by the CWQT programme, so a fresh
+run picks up new samples. Archival snapshots of both sources sit in
+data/cwqt/ so the project has its own copy if Drive access is ever lost,
+but they are not what the loader reads. Usage:
 
     python cwqt.py            # download both sources and upsert
     python cwqt.py --dry-run  # parse and summarize, write nothing

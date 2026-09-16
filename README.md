@@ -86,10 +86,17 @@ db/schema.sql         complete database definition (tables + views)
 forms/create_observation_form.gs
                       Apps Script that built the observation Google Form;
                       the reference copy of every question and option
-data/                 local file cache, not part of git: raw inputs named
-                      by table (duro/, turbidity_rta2/, ...) plus
-                      exports/ — a full CSV snapshot of each table,
-                      refreshed automatically after every load
+data/                 local file cache, not part of git. Raw inputs named
+                      by the table they feed:
+  duro/               229 daily sonde CSVs (the loader's input)
+  turbidity_rta1/     GRT_Reports.xlsx + together_data.xlsx (input)
+  turbidity_rta2/     113 weekly Superfund report PDFs (input)
+  cwqt/               archival copies of the two CWQT sources; the
+                      loader reads those sheets live, so these are a
+                      safety net, not its input
+  exports/            a full CSV snapshot of every table, rewritten
+                      automatically after each load (output only —
+                      nothing reads these back)
 analysis/             ad-hoc analysis scripts
 .env                  database credentials (gitignored; see .env.example)
 ```
