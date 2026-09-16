@@ -54,10 +54,10 @@ data_import/          all runnable Python (loaders import each other as
                       columns to the target table's declared types)
   duro.py             raw Duro sonde CSVs -> duro
   cwqt.py             CWQT master sheet + winter sheet -> cwqt
-  turbidity_rta1.py   local CSV export of GRT_Reports -> turbidity_rta1
+  turbidity_rta1.py   GRT spreadsheet exports -> turbidity_rta1
   turbidity_rta2.py   RTA2 weekly-report PDFs -> turbidity_rta2
-  tide_predictions.py NOAA tide API (OLD STYLE: fetches but writes
-                      nothing yet — see "Remaining work")
+  weather.py          Open-Meteo hourly weather -> weather
+  tide_predictions.py NOAA CO-OPS tide predictions -> tide_predictions
   observations.py     Google Form responses -> observations
 db/schema.sql         complete database definition (tables + views)
 forms/create_observation_form.gs
@@ -91,14 +91,18 @@ python duro.py --dry-run   # every loader supports --dry-run (parse, no write)
 | `turbidity_rta2` | one row per 15-min turbidity reading | **17,409 rows**, Aug 2024 – Aug 2026 | Weekly WQM report PDFs at gowanussuperfund.com (auto-discovered and scraped) |
 | `turbidity_rta1` | one row per 15-min turbidity reading | **20,795 rows**, Aug 2023 – Apr 2024 | `GRT_Reports.xlsx` (transcription of the RTA1-era PDFs) + `together_data.xlsx` (fills a Feb–Mar 2024 gap), both hand-downloaded into `data/turbidity_rta1/` |
 | `observations` | one row per survey submission | empty (form is live, no responses yet) | Google Form -> response sheet (public), loaded by `observations.py` |
-| `tide_predictions` | one row per predicted high/low tide | **empty — loader not built** | NOAA Tides & Currents API, station 8517921 (Gowanus Bay); `tide_predictions.py` fetches but doesn't load |
-| `weather` | one row per weather observation | **empty — loader not built** | Undecided; see "Remaining work" |
+| `tide_predictions` | one row per predicted high/low tide | **22,173 rows**, Jan 2012 – Sept 2027 | NOAA CO-OPS API, station 8517921 (Gowanus Bay). Free, no key |
+| `weather` | one row per hour | **~129,000 rows**, Jan 2012 – present | Open-Meteo historical API (ERA5 reanalysis) at the canal. Free, no key |
 | `waterbody_advisories` | placeholder (`id` only) | **empty — table not designed** | NYC DEP advisories page + the manually-updated "Advisory Tracker" sheet in Drive |
 
 **Views** (all computed on demand): `duro_filtered` (readings at a known
 site, in water — reproduces the R pipeline's filter), `daily_site_summary`
-(per-day/site DO, temperature, salinity, pH stats). Planned: `turbidity`
-(long-format union of both turbidity eras with a `phase` column).
+(per-day/site DO, temperature, salinity, pH stats), `rain_windows`
+(rolling 24/48/72-hour rainfall ending at each hour — the join target for
+"how much rain fell before this sample", which is what drives CSO
+discharges and the bacteria spikes that follow), and `daily_weather`
+(daily rain, peak hourly rain, wind). Planned: `turbidity` (long-format
+union of both turbidity eras with a `phase` column).
 
 Canonical site vocabulary: `duro.site` slugs (`Second_St`, `Douglass_St`,
 `Ninth_St_Bridge`, ...) assigned from GPS bounding boxes defined in the
@@ -172,6 +176,18 @@ name, and re-run `python turbidity_rta1.py`.
   are recoverable if someone gets the buoy deployment schedule from GRT.
 - **Google Sheets eats leading zeros** — observer IDs are re-padded to 4
   digits by `observations.py`.
+- **`weather` is modelled, not measured.** ERA5 reanalysis on a ~9–25 km
+  grid. It correlates 0.67 with the Central Park gauge over 450 CWQT
+  sample days — close enough for correlation work, but a localised
+  cloudburst over the canal can be smoothed away, and those are exactly
+  the storms that trigger CSOs. Quote rainfall figures accordingly.
+- **Rainfall accumulation is computed, never stored.** `weather` holds
+  hourly `precipitation_mm`; use the `rain_windows` view for 24/48/72-hour
+  antecedent totals rather than adding accumulation columns, so the
+  window stays tunable.
+- **Tide rows are predictions, not observations** — astronomical highs
+  and lows for a station with no sensor, and they extend a year into the
+  future, so `max(predicted_at)` is ahead of today by design.
 - If a Google Form question is reworded, its response-sheet column
   header changes: update `COLUMN_MAP` in `observations.py` and mirror
   the change in `forms/create_observation_form.gs`.
@@ -184,17 +200,20 @@ Empty tables and what fills them:
    RTA1 sources stop Apr 6, 2024; the RTA2 weekly reports resume Aug 13.
    Whether this is a genuine monitoring pause between construction
    phases or a missing source is unconfirmed — worth asking GRT.
-2. **`tide_predictions`** — rewrite `tide_predictions.py` as a proper loader: fetch
-   `https://api.tidesandcurrents.noaa.gov/api/prod/datagetter` (station
-   8517921, product `predictions`, interval `hilo`) for a rolling date
-   window and upsert. The API is free and public; this is the easiest
-   remaining loader.
-3. **`weather`** — decide the source first. Candidates: the KNYGOWAN6
-   Weather Underground station (what the org used historically; its API
-   costs money), NOAA/NWS observations for a nearby station (free), or
-   Open-Meteo historical + forecast API (free, no key). The existing
-   `weather` table columns mirror a Weather Underground export. Rainfall
-   matters most (drives CSO events and bacteria levels).
+2. **Rainfall precision (optional upgrade).** `weather` is ERA5
+   reanalysis on a grid, not a Gowanus rain gauge. Against the CWQT
+   program's own Central Park figures it correlates 0.67 across 450
+   sample days — the same weather, not the same measurement. If
+   gauge-accurate local rainfall ever matters more than convenience,
+   NOAA NCEI's Central Park record (free, needs a token) is the upgrade,
+   and is the gauge CWQT itself uses. Avoid reviving the KNYGOWAN6
+   Weather Underground route: the API costs money and the old manual
+   workflow was error-prone by its author's own admission.
+3. **Observed water level (optional).** `tide_predictions` holds
+   *astronomical predictions* for station 8517921, which has no sensor.
+   For storm surge — plausibly relevant to CSO and fish-kill events —
+   the nearest real gauge is The Battery (8518750, product
+   `water_level`); the same loader would extend to it.
 4. **`waterbody_advisories`** — design the table (current placeholder has
    only `id`), then load from the "Advisory Tracker" sheet in Drive
    (manually maintained, still updated) and/or scrape the NYC DEP

@@ -72,14 +72,17 @@ CREATE TABLE IF NOT EXISTS turbidity_rta2 (
 );
 
 ------------------------------------------------------------------------
--- NOAA tide predictions for station 8517921 (Gowanus Bay), from
--- tide_predictions.py.
+-- NOAA astronomical tide predictions, one row per high or low tide,
+-- loaded by tide_predictions.py from the NOAA CO-OPS API. Station 8517921
+-- (Gowanus Bay) is a prediction-only station: these are predicted heights
+-- above MLLW, not measured water levels. Predictions extend into the
+-- future, so max(predicted_at) is normally ahead of today.
 ------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tide_predictions (
-    date                 date,
-    time                 time,
-    prediction_in_meters double precision,
-    PRIMARY KEY (date, time)
+    predicted_at timestamp PRIMARY KEY,
+    height_m     double precision,
+    tide_type    text,   -- 'H' (high) or 'L' (low)
+    station      text
 );
 
 ------------------------------------------------------------------------
@@ -116,21 +119,26 @@ CREATE TABLE IF NOT EXISTS cwqt (
     PRIMARY KEY (date, site_id)
 );
 
+------------------------------------------------------------------------
+-- Hourly weather for the canal, loaded by weather.py from the Open-Meteo
+-- historical API (ERA5 reanalysis). NOTE: reanalysis is modelled on a
+-- grid, not measured at a Gowanus rain gauge -- good for correlation,
+-- but a localised summer cloudburst can be smoothed away.
+-- Accumulation is deliberately NOT stored: sum precipitation_mm over
+-- whatever window matters (see the rain_windows view).
+------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS weather (
-    date         date,
-    time         time,
-    temperature  double precision,
-    dew_point    double precision,
-    humidity     double precision,
-    wind         varchar,
-    speed        double precision,
-    gust         double precision,
-    pressure     double precision,
-    precip_rate  double precision,
-    precip_accum double precision,
-    uv           double precision,
-    solar        double precision,
-    PRIMARY KEY (date, time)
+    observed_at        timestamp PRIMARY KEY,
+    temperature_c      double precision,
+    dew_point_c        double precision,
+    humidity_pct       double precision,
+    precipitation_mm   double precision,  -- rain + snow water equivalent
+    rain_mm            double precision,
+    wind_speed_kmh     double precision,
+    wind_direction_deg double precision,
+    wind_gusts_kmh     double precision,
+    pressure_hpa       double precision,
+    solar_wm2          double precision
 );
 
 CREATE TABLE IF NOT EXISTS waterbody_advisories (
@@ -193,3 +201,32 @@ SELECT
     round(avg(ph)::numeric, 2)            AS avg_ph
 FROM duro_filtered
 GROUP BY observed_at::date, site;
+
+-- Rolling rainfall totals ending at each hour. This is the join target
+-- for "how much rain fell before this sample": CSO discharges, and the
+-- bacteria spikes that follow them, track antecedent rainfall rather
+-- than the rain falling at the moment of sampling.
+CREATE OR REPLACE VIEW rain_windows AS
+SELECT
+    observed_at,
+    precipitation_mm,
+    round(sum(precipitation_mm) OVER w24::numeric, 2) AS rain_24h_mm,
+    round(sum(precipitation_mm) OVER w48::numeric, 2) AS rain_48h_mm,
+    round(sum(precipitation_mm) OVER w72::numeric, 2) AS rain_72h_mm
+FROM weather
+WINDOW
+    w24 AS (ORDER BY observed_at RANGE BETWEEN INTERVAL '23 hours' PRECEDING AND CURRENT ROW),
+    w48 AS (ORDER BY observed_at RANGE BETWEEN INTERVAL '47 hours' PRECEDING AND CURRENT ROW),
+    w72 AS (ORDER BY observed_at RANGE BETWEEN INTERVAL '71 hours' PRECEDING AND CURRENT ROW);
+
+-- Daily rainfall and wind summary, for dashboards and quick eyeballing.
+CREATE OR REPLACE VIEW daily_weather AS
+SELECT
+    observed_at::date                        AS date,
+    round(sum(precipitation_mm)::numeric, 2) AS rain_mm,
+    round(max(precipitation_mm)::numeric, 2) AS peak_hourly_rain_mm,
+    round(avg(temperature_c)::numeric, 1)    AS avg_temp_c,
+    round(avg(wind_speed_kmh)::numeric, 1)   AS avg_wind_kmh,
+    round(max(wind_gusts_kmh)::numeric, 1)   AS max_gust_kmh
+FROM weather
+GROUP BY observed_at::date;

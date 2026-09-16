@@ -14,14 +14,18 @@ import traceback
 import cwqt
 import duro
 import observations
+import tide_predictions
 import turbidity_rta1
 import turbidity_rta2
+import weather
 
 LOADERS = [
     ('Duro sonde readings -> duro', duro),
     ('CWQT Enterococcus -> cwqt', cwqt),
     ('RTA2 turbidity PDFs -> turbidity_rta2', turbidity_rta2),
-    ('GRT_Reports sheet -> turbidity_rta1', turbidity_rta1),
+    ('GRT exports -> turbidity_rta1', turbidity_rta1),
+    ('Open-Meteo hourly weather -> weather', weather),
+    ('NOAA tide predictions -> tide_predictions', tide_predictions),
     ('Observation survey -> observations', observations),
 ]
 
