@@ -14,6 +14,29 @@ dashboards.
 - Shared Drive folder: https://drive.google.com/drive/folders/1AV7SIUhF868zjfiPoFcmEyNCpeQxtbJd
 - Observation survey (live Google Form): https://docs.google.com/forms/d/1-UE9hjuBt_GWpDRe1Z4BspCj_s6_ZYLIVvmQpyfTJCM/viewform
 
+## Vocabulary
+
+- **RTA — Remediation Target Area.** EPA's 2013 Record of Decision splits
+  the canal into three segments, dredged in sequence: **RTA1** Butler St
+  → 3rd St (construction Nov 2020 – summer 2024), **RTA2** 3rd St →
+  Hamilton Ave (began June 2024, several years to run), **RTA3** Hamilton
+  Ave → Gowanus Bay (not started). The `turbidity_rta1` and
+  `turbidity_rta2` tables are therefore *different stretches of canal*
+  monitored in sequence, not merely older and newer data — which is
+  another reason not to treat a buoy in one as continuous with a
+  similarly-named buoy in the other. The `site_zones` view maps every
+  monitoring site to its zone.
+- **WQM / WQMP** — Water Quality Monitoring (Plan), the GRT programme
+  that produces the weekly turbidity reports.
+- **GRT — Gowanus Remediation Team**, the contractor consortium running
+  the cleanup and publishing at gowanussuperfund.com.
+- **CWQT — Citizens' Water Quality Testing**, the citywide volunteer
+  Enterococcus sampling programme (SwimmableNYC / Billion Oyster
+  Project), source of the `cwqt` table.
+- **MPN** — Most Probable Number, the bacteria count unit (per 100 mL).
+- **Duro** — the UAS field sonde the Dredgers deploy; source of `duro`.
+- **TB** — turning basin, in site names like `Fourth_St_TB`.
+
 ## Design principles (read this first)
 
 The pipeline must stay maintainable by people who don't code. Everything
@@ -95,9 +118,13 @@ python duro.py --dry-run   # every loader supports --dry-run (parse, no write)
 | `weather` | one row per hour | **~129,000 rows**, Jan 2012 – present | Open-Meteo historical API (ERA5 reanalysis) at the canal. Free, no key |
 | `waterbody_advisories` | placeholder (`id` only) | **empty — table not designed** | NYC DEP advisories page + the manually-updated "Advisory Tracker" sheet in Drive |
 
-**Views** (all computed on demand): `duro_filtered` (readings at a known
-site, in water — reproduces the R pipeline's filter), `daily_site_summary`
-(per-day/site DO, temperature, salinity, pH stats), `rain_windows`
+**Views** (all computed on demand — a view is a saved query, so it is
+never "out of date": load new rows and every view reflects them on the
+next read): `duro_filtered` (readings at a known site, in water —
+reproduces the R pipeline's filter), `site_zones` (site → RTA cleanup
+zone, joinable to `duro`, `cwqt` and `observations`),
+`daily_site_summary` (per-day/site DO, temperature, salinity, pH stats,
+carrying `rta_zone`), `rain_windows`
 (rolling 24/48/72-hour rainfall ending at each hour — the join target for
 "how much rain fell before this sample", which is what drives CSO
 discharges and the bacteria spikes that follow), and `daily_weather`
@@ -196,10 +223,14 @@ name, and re-run `python turbidity_rta1.py`.
 
 Empty tables and what fills them:
 
-1. **Turbidity gap, Apr 7 – Aug 12 2024** — no data in either table.
-   RTA1 sources stop Apr 6, 2024; the RTA2 weekly reports resume Aug 13.
-   Whether this is a genuine monitoring pause between construction
-   phases or a missing source is unconfirmed — worth asking GRT.
+1. **Confirm the RTA zone boundaries** (small). `site_zones` assigns each
+   site to a cleanup area by applying the published street boundaries to
+   its latitude. Four sites sit within ~50 m of a line — `Third_St`,
+   `Bond_St`, `WholeFoodsWest` at the 3rd St boundary and
+   `Hamilton_Bridge` at the Hamilton Ave one — and EPA states RTA1
+   includes part of the 5th Street turning basin, which lies south of
+   3rd St, so the real boundary is not a clean latitude cut. Check them
+   against EPA's own RTA figure before any finding leans on them.
 2. **Rainfall precision (optional upgrade).** `weather` is ERA5
    reanalysis on a grid, not a Gowanus rain gauge. Against the CWQT
    program's own Central Park figures it correlates 0.67 across 450

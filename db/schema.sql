@@ -186,12 +186,54 @@ WHERE site IS NOT NULL
   AND site <> 'TBD'
   AND NOT flag_out_of_water;
 
+-- Which EPA Remediation Target Area each monitoring site sits in. The
+-- 2013 Record of Decision splits the canal into three segments dredged in
+-- sequence: RTA1 Butler St to 3rd St (built Nov 2020 - summer 2024),
+-- RTA2 3rd St to Hamilton Ave (began June 2024), RTA3 Hamilton Ave to
+-- Gowanus Bay (not started). Join this to duro.site / cwqt.site /
+-- observations.site to group readings by cleanup phase.
+--
+-- Assignments apply the published street boundaries to each site's
+-- latitude. Three sites sit within ~50 m of a boundary and should be
+-- confirmed against EPA's own RTA figure before anything load-bearing
+-- rests on them: Third_St and Bond_St (called RTA1 here) and
+-- WholeFoodsWest (called RTA2) straddle the 3rd St line, and
+-- Hamilton_Bridge sits exactly on the RTA2/RTA3 line. EPA also states
+-- RTA1 includes part of the 5th Street turning basin, which is south of
+-- 3rd St -- so the true boundary is not a clean latitude cut.
+CREATE OR REPLACE VIEW site_zones AS
+SELECT * FROM (VALUES
+    ('Douglass_St',              'RTA1'),
+    ('Carroll_St',               'RTA1'),
+    ('First_St',                 'RTA1'),
+    ('Second_St',                'RTA1'),
+    ('Third_St',                 'RTA1'),
+    ('Bond_St',                  'RTA1'),
+    ('WholeFoodsWest',           'RTA2'),
+    ('Second_Ave',               'RTA2'),
+    ('Seventh_St_Canal',         'RTA2'),
+    ('Sixth_St_TB',              'RTA2'),
+    ('Huntington_St',            'RTA2'),
+    ('Fourth_St_TB',             'RTA2'),
+    ('Seventh_St_TB',            'RTA2'),
+    ('Third_Ave',                'RTA2'),
+    ('Ninth_St_Bridge',          'RTA2'),
+    ('South_of_Ninth_St_Bridge', 'RTA2'),
+    ('Eleventh_St_TB',           'RTA2'),
+    ('Hamilton_Bridge',          'RTA2'),
+    ('South_of_Hamilton_Bridge', 'RTA3'),
+    ('Sanitation_TB',            'RTA3'),
+    ('GD_Bunker',                'RTA3'),
+    ('Mouth',                    'RTA3')
+) AS t(site, rta_zone);
+
 -- Per-day, per-site summary for dashboards. Built on the filtered view so
 -- out-of-water and unlocated readings never skew the stats.
 CREATE OR REPLACE VIEW daily_site_summary AS
 SELECT
     observed_at::date                     AS date,
-    site,
+    d.site,
+    z.rta_zone,
     count(*)                              AS n_readings,
     round(avg(do_mg_l)::numeric, 2)       AS avg_do_mg_l,
     round(min(do_mg_l)::numeric, 2)       AS min_do_mg_l,
@@ -199,8 +241,9 @@ SELECT
     round(avg(water_temp_c)::numeric, 2)  AS avg_water_temp_c,
     round(avg(salinity_ppt)::numeric, 2)  AS avg_salinity_ppt,
     round(avg(ph)::numeric, 2)            AS avg_ph
-FROM duro_filtered
-GROUP BY observed_at::date, site;
+FROM duro_filtered d
+LEFT JOIN site_zones z ON z.site = d.site
+GROUP BY observed_at::date, d.site, z.rta_zone;
 
 -- Rolling rainfall totals ending at each hour. This is the join target
 -- for "how much rain fell before this sample": CSO discharges, and the
