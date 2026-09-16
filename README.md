@@ -221,12 +221,33 @@ name, and re-run `python turbidity_rta1.py`.
 
 ## Operating notes: secrets, backups, and the bus factor
 
-Proportionate practice for this project. The data is public
-environmental monitoring — EPA-published turbidity, a citywide bacteria
-programme, volunteer sonde readings — and the observation survey
-deliberately collects self-chosen 4-digit IDs rather than names, so
-there is no personal data to protect. The controls below are the ones
-that actually earn their cost here.
+**Not all of this data is public, and the distinction matters.**
+
+*Public, published by their owners:* the RTA2 turbidity PDFs on
+gowanussuperfund.com, NOAA tide predictions, Open-Meteo weather.
+
+*Not public:* the **Duro sonde readings** are the Dredgers' own
+unpublished field data. The **GRT_Reports transcription** is Corinne's
+work product — the underlying PDFs are public, the transcription is
+unpaid labour that is not. The **CWQT master sheet** belongs to another
+organisation (SwimmableNYC / Billion Oyster Project) and was shared with
+this project, not published by it; the same goes for the **winter
+Enterococcus data** processed by the NY Harbor School. The **data
+dictionary, calibration notes and SOW** are internal documents.
+
+*Pseudonymous, once it exists:* observation survey responses carry a
+self-chosen 4-digit ID rather than a name, but an ID plus a location plus
+a timestamp, repeated weekly, can identify a regular volunteer in a small
+community. Treat it as pseudonymous, not anonymous.
+
+Practical consequences: `data/` (raw inputs and the `exports/` snapshots
+of every table) is gitignored and must stay that way — it holds the
+non-public material listed above. Anything republished from `cwqt` needs
+attribution to the CWQT programme. And check what a dataset actually is
+before putting it somewhere public, rather than assuming the whole
+database inherits the Superfund reports' public status.
+
+The controls below are sized to that reality.
 
 - **`.env` is the only secret.** It is gitignored; `.env.example`
   documents the keys. Never commit the real file, and never paste the
