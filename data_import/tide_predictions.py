@@ -1,9 +1,5 @@
 import pandas as pd
-import pathlib as pl
 import requests
-
-dir_this_data = pl.Path(__file__).parent.parent.absolute() / 'data' / 'noaa'
-dir_this_data.mkdir(exist_ok=True)
 
 # PARAMETERS
 begin_date = '20260101'  # Dates in YYYYMMDD
@@ -37,7 +33,6 @@ def get_data():
     df['v'] = pd.to_numeric(df['v'])
     df = df.rename(columns={'t': 'datetime', 'v': 'prediction_in_meters'})
 
-    df.to_csv(dir_this_data / f'tide_predictions_{begin_date}_to_{end_date}.csv', index=False)
     return df
 
 
