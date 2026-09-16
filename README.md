@@ -219,6 +219,48 @@ name, and re-run `python turbidity_rta1.py`.
   header changes: update `COLUMN_MAP` in `observations.py` and mirror
   the change in `forms/create_observation_form.gs`.
 
+## Operating notes: secrets, backups, and the bus factor
+
+Proportionate practice for this project. The data is public
+environmental monitoring — EPA-published turbidity, a citywide bacteria
+programme, volunteer sonde readings — and the observation survey
+deliberately collects self-chosen 4-digit IDs rather than names, so
+there is no personal data to protect. The controls below are the ones
+that actually earn their cost here.
+
+- **`.env` is the only secret.** It is gitignored; `.env.example`
+  documents the keys. Never commit the real file, and never paste the
+  password into a chat, an issue, or a commit message. Rotate it in the
+  Supabase dashboard (Settings > Database > Reset database password) if
+  it is ever exposed — rotation is quick and invalidates every stale
+  copy at once. Last rotated 2026-09-16.
+- **Back up before schema changes.** This is the real gap. Anyone with
+  the `.env` has full rights to drop and recreate tables, and several
+  tables in this repo have been reshaped that way. Take a Supabase
+  backup (or confirm the table is empty, as the reshapes here did)
+  before running a migration, because nothing else stands between a
+  mistake and the data.
+- **Consider a second Supabase project as a dev target** if the schema
+  starts changing often. Free tier; point `.env` at it while testing a
+  loader, then switch back. Equivalent cheaper step: a read-only
+  database role for exploration, keeping the full-rights role for
+  deliberate migrations.
+- **When automating, secrets go in GitHub Actions secrets**, never in
+  the workflow file. Prefer a Supabase key scoped to what the job needs
+  (inserts) over the full database password.
+- **Working with an AI agent on this repo:** `auto` permission mode is
+  fine for the read-edit-run loop and makes the work far faster, but it
+  also means file deletions and schema drops happen without a prompt.
+  Use a mode that asks before destructive steps, or ask the agent to
+  state what it is about to delete and why it is recoverable.
+- **The bus factor is the biggest real risk, not a breach.** The
+  failure mode for a volunteer project is that the one person who
+  understands the pipeline moves on and the org drifts back to
+  spreadsheets — which is what happened to the R scripts this pipeline
+  replaced. Mitigation: have a second person run `python main.py` from a
+  clean clone before that knowledge lives in one head, and keep this
+  README honest about what is verified versus assumed.
+
 ## Remaining work
 
 Empty tables and what fills them:
@@ -272,10 +314,9 @@ Empty tables and what fills them:
    Actions scheduled workflow running `python main.py` (needs the repo
    pushed to GitHub and `.env` values as repo secrets). Credentials are
    clean as of 2026-09-16: the commit that once hardcoded the database
-   password was amended before ever being pushed, and pushed history
-   contains no secrets. Rotating the Supabase password is still worth
-   doing before the repo goes public, since the old string survives in
-   the local reflog until garbage collection.
+   password was amended before it was ever pushed, pushed history
+   contains no secrets, and the Supabase password has since been rotated,
+   so the string that appears in older local git objects is dead.
 11. **Dashboard** — not started. Supabase's auto-generated REST API or a
     direct Postgres connection (Looker Studio supports Postgres) both
     work; point it at the views, not the tables.
