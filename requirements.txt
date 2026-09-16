@@ -4,5 +4,6 @@ pathlib
 pdfplumber
 psycopg2-binary
 requests
-sqlalchemypython-dotenv
+sqlalchemy
+python-dotenv
 openpyxl
