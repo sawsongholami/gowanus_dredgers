@@ -32,6 +32,7 @@ standard = alt.Chart(df.head(1)).mark_rule(color=charts.REFERENCE, strokeDash=[4
 st.altair_chart(bars + standard, width='stretch')
 
 st.caption('The dashed line is the 5 mg/L standard. Sites with fewer than 100 readings are left out. '
+           'Readings run from August 2023 to October 2024; the sonde is now out of service. '
            'Every reading is from a daytime outing of about 40 minutes, so the overnight low, '
            "when oxygen is usually lowest, hasn't been measured.")
 

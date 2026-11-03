@@ -128,7 +128,7 @@ python duro.py --dry-run   # every loader supports --dry-run (parse, no write)
 
 | Table | Grain | Status (Sept 2026) | Source |
 |---|---|---|---|
-| `duro` | one row per ~30s sonde reading | **21,000 rows**, Aug 2023 – Oct 2024 | Raw daily CSVs from the Duro UAS sonde, in Drive `Dredger_Duro_Data/1_Raw_CSVs/` (copy into `data/duro/` and run `duro.py`) |
+| `duro` | one row per ~30s sonde reading | **21,000 rows**, Aug 2023 – Oct 2024. **Closed: the sonde is broken** (reported 2026-11-03), no replacement planned | Raw daily CSVs from the Duro UAS sonde, in Drive `Dredger_Duro_Data/1_Raw_CSVs/` (copy into `data/duro/` and run `duro.py`) |
 | `cwqt` | one row per weekly Enterococcus sample | **507 rows**, May 2012 – Sept 2026, 6 sites | CWQT Master Data Sheet (citywide program, live) + "Enterococcus at 2nd St" sheet (winter 2023-24, off-season) |
 | `turbidity_rta2` | one row per 15-min turbidity reading | **17,409 rows**, Aug 2024 – Aug 2026 | Weekly WQM report PDFs at gowanussuperfund.com (auto-discovered and scraped) |
 | `turbidity_rta1` | one row per 15-min turbidity reading | **20,795 rows**, Aug 2023 – Apr 2024 | `GRT_Reports.xlsx` (transcription of the RTA1-era PDFs) + `together_data.xlsx` (fills a Feb–Mar 2024 gap), both hand-downloaded into `data/turbidity_rta1/` |
@@ -564,9 +564,13 @@ Empty tables and what fills them:
    this project has not yet opened; DEP also publishes harbor survey data
    on NYC Open Data. Would give the Dredgers' own sonde readings an
    independent agency baseline to compare against.
-8. **Duro data catch-up** — `data/duro/` currently holds CSVs through
-   Oct 2024. Newer outings (if any) live in Drive
-   `Dredger_Duro_Data/1_Raw_CSVs/`; drop them in the folder and re-run.
+8. **Duro is closed.** The sonde broke (reported 2026-11-03) and no
+   replacement is planned, so `duro` (Aug 21, 2023 – Oct 18, 2024) is now a
+   finished historical dataset. One last check before calling it final: look
+   in Drive `Dredger_Duro_Data/1_Raw_CSVs/` for any outing after Oct 18,
+   2024; if there is one, drop it in `data/duro/` and re-run `duro.py`. If a
+   new instrument arrives, check its file format against the two Duro
+   formats in "Data quirks" before reusing `duro.py`.
 9. **`turbidity` union view** — done (2026-11-03); see the views above.
 10. **Automation** — `.github/workflows/daily_load.yml` runs the five
    loaders whose sources are online (cwqt, turbidity_rta2, weather,
