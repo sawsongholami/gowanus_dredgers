@@ -24,6 +24,8 @@ PAGES = {
     'oxygen': st.Page('app_pages/oxygen.py', title='Dissolved oxygen', icon='🐟'),
     'turbidity': st.Page('app_pages/turbidity.py', title='Turbidity', icon='🌫️'),
     'viewers': st.Page('app_pages/viewers.py', title='Who can see this', icon='🔑'),
+    # Fixed URL (/privacy): it is the privacy policy link on Google's sign-in screen.
+    'privacy': st.Page('app_pages/privacy.py', title='Privacy', icon='🔒', url_path='privacy'),
 }
 
 email = access.current_email()
