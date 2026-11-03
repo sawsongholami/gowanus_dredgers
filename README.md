@@ -83,6 +83,10 @@ data_import/          all runnable Python (loaders import each other as
   tide_predictions.py NOAA CO-OPS tide predictions -> tide_predictions
   observations.py     Google Form responses -> observations
 db/schema.sql         complete database definition (tables + views)
+dashboard/            the public dashboard (static; see "Dashboard" below)
+  build_data.py       views/snapshot -> data/dashboard.{json,js}
+  index.html          the page itself
+  vendor/             ECharts, vendored so the folder is self-contained
 forms/create_observation_form.gs
                       Apps Script that built the observation Google Form;
                       the reference copy of every question and option
@@ -187,6 +191,63 @@ To refresh any of these: open the file in Drive, File > Download >
 Microsoft Excel (.xlsx), save into `data/turbidity_rta1/` under the same
 name, and re-run `python turbidity_rta1.py`.
 
+## Dashboard
+
+`dashboard/` is a **static** dashboard: one HTML file, one generated data
+file, and a vendored copy of the chart library. No server, no database
+connection from the browser, no API keys. To publish it, copy the folder
+onto a web host.
+
+```bash
+python dashboard/build_data.py      # reads the DB; falls back to data/exports/
+python -m http.server 8777 --directory dashboard
+```
+
+Then open http://localhost:8777. The page also works opened straight off
+disk — the data is loaded as a `<script>` rather than `fetch`ed, because
+`fetch` from a `file://` page is blocked by the browser.
+
+The generated `dashboard/data/` is git-ignored and not in the repo: this
+repo is public, and those files summarise the Dredgers' unpublished Duro
+data and CWQT data that belongs to another organisation, so they stay out
+until the project lead approves publishing them. Run
+`python dashboard/build_data.py` to regenerate them locally.
+
+**The Streamlit side is now built, as one app rather than a pair.** The
+plan was a public Streamlit app and a private one. What got built (see
+"Streamlit app" below) is a single app in `app/`, hosted on Streamlit
+Community Cloud, where Google sign-in decides which pages a viewer sees.
+The split is now: this static page as the public-page option, and the
+Streamlit app as the team dashboard. Publishing either one waits on the
+project lead.
+
+**Why the public page here is static.** Streamlit is a server: to put it
+on the Urban Data Response site you would host the app somewhere else and
+embed it in an iframe, which means something to keep running, keep paid
+for and keep patched, and the free tier sleeps when idle. A static page is
+just files — it drops into any CMS or web host, costs nothing, cannot
+leak a credential, and has no runtime to maintain. Streamlit earns its
+server on the private side, where interactivity and per-viewer access
+matter. Hand-written D3 was not worth it for standard charts.
+
+**`build_data.py` is the privacy boundary.** Everything it writes into
+`dashboard/data/` becomes public the moment the page is published, so it
+emits aggregates only — yearly and per-site summaries, never a table dump
+— and reads nothing at all from `observations`, which holds pseudonymous
+volunteer submissions. Before this goes on a public site, settle the
+question in "Operating notes" above: the Duro sonde readings are the
+Dredgers' own unpublished data and the CWQT figures belong to another
+organisation. Publishing aggregates of someone else's data, with
+attribution, is a different decision from publishing the database, and
+it is the org's to make, not the pipeline's.
+
+**It reads the views, not the tables** (`duro_filtered`, `site_zones`), so
+a schema change stays invisible to the page. When the database is
+unreachable it falls back to the CSV snapshot in `data/exports/` and the
+page says so in its header and footer, with the data's as-of date — a
+dashboard that silently shows stale numbers is worse than one that admits
+it.
+
 ## Data quirks an agent/maintainer must know
 
 - **Duro CSVs have two formats.** Pre-Nov-2023: unit-suffixed headers,
@@ -205,6 +266,25 @@ name, and re-run `python turbidity_rta1.py`.
 - **RTA1-era Superfund PDFs cannot be scraped** — their turbidity tables
   are embedded images. That's why the RTA1 era loads from the GRT_Reports
   sheet instead (someone already transcribed them).
+- **Early-phase turbidity readings of exactly 0.00 NTU are suspect.**
+  533 RTA1 rows (Aug–Sep 2023) and 200 RTA2 rows (Sep–Oct 2024) read
+  exactly zero — 1–3% of each era, clustered in the opening weeks, which
+  points at instrument commissioning rather than genuinely clear water
+  (0.00 NTU is distilled water; the canal's median is 6–7). They drag the
+  first weekly medians to near zero. Not flagged in the DB; the dashboard
+  plots them as recorded and says so.
+- **RTA2 turbidity is weekday-daytime only; RTA1 was round the clock.** RTA1
+  readings cover all 24 hours (33% fall between 22:00 and 06:00) and 28% land
+  on weekends. RTA2 covers only 07:00–17:00, Monday to Friday: **0% at night,
+  0.2% at weekends.** This is operational monitoring during dredging shifts,
+  not a continuous environmental record, so the two tables are different kinds
+  of measurement on top of being different stretches of canal. Two practical
+  consequences. RTA2 is **76% complete against its own schedule** (and 43 of a
+  possible 44 readings on a day it runs), so it is not broken — judging it
+  against a 24/7 ideal gives a misleading 25%. And the restriction does *not*
+  bias the median: applying the RTA2 window to RTA1, which has both, moves the
+  median turbidity from 6.31 to 6.30 NTU. Medians are comparable; event capture
+  is not, since a plume at night or on a Sunday is invisible in RTA2.
 - **Turbidity buoys move and get renamed.** RTA1 era has 7 station
   columns, RTA2 has 3. Whether RTA1 `n_3sb` is the same instrument as
   RTA2 `n3sb` is unconfirmed — do not silently merge them.
@@ -216,13 +296,40 @@ name, and re-run `python turbidity_rta1.py`.
   loads only the two trusted columns and leaves the rest NULL for
   gap-fill rows. Roughly 5,300 readings sit unused in that file; they
   are recoverable if someone gets the buoy deployment schedule from GRT.
+- **The sonde and the bacteria data barely overlap.** `duro` and `cwqt` share
+  only 30 calendar days, and just **15 of those have a matching site**; all
+  three of duro/cwqt/turbidity coincide on 16 days. So dissolved oxygen,
+  temperature and salinity cannot be related to Enterococcus at any grain —
+  not a modelling problem, a scheduling one. Weather and tides, being
+  continuous, join to everything. Before designing an analysis, check the
+  overlap rather than assuming it.
+- **The Duro record is trips, not a time series.** 210 outings over 423 days,
+  a median of 37 minutes each, starting around 08:00: **2.7% of elapsed time**,
+  all of it in daylight. Daily averages from it are averages of one short
+  daytime transect, and the overnight dissolved-oxygen minimum has never been
+  observed.
+- **Bacteria sampling is weekly, Thursday, and summer.** 96% of `cwqt` samples
+  fall May–October and 276 of 292 sample days are Thursdays. One off-season
+  winter exists (2023-24, one site, 20 samples). Seasonal and annual claims are
+  safe; "year-round" claims are not.
 - **Google Sheets eats leading zeros** — observer IDs are re-padded to 4
   digits by `observations.py`.
-- **`weather` is modelled, not measured.** ERA5 reanalysis on a ~9–25 km
-  grid. It correlates 0.67 with the Central Park gauge over 450 CWQT
-  sample days — close enough for correlation work, but a localised
-  cloudburst over the canal can be smoothed away, and those are exactly
-  the storms that trigger CSOs. Quote rainfall figures accordingly.
+- **`weather` is modelled, not measured, and not over the canal.**
+  Reanalysis has no notion of a point: the API snaps our mid-canal
+  request to its own grid, and the cell it serves is centred
+  40.6678, −73.9377 — about **4.5 km east-southeast, over inland
+  Brooklyn rather than the water**. That cell is the same for every year
+  2012–2026 (checked), so the series is at least internally consistent,
+  with no location or model discontinuity. It correlates 0.67 with the
+  Central Park gauge across 450 CWQT sample days — close, clearly not the
+  same measurement. Fine for temperature, humidity and wet-day-versus-dry
+  classification, which vary smoothly across a few kilometres. Weaker for
+  the thing that matters most here: a summer cloudburst that triggers a
+  CSO over Gowanus can miss a cell 4.5 km inland entirely. Quote rainfall
+  figures accordingly, and if a published finding ever leans on
+  canal-local rain, switch to gauge data (NOAA NCEI Central Park) rather
+  than hunting a nearer grid cell — at ~9 km resolution a closer cell
+  would feel better without being more local.
 - **Rainfall accumulation is computed, never stored.** `weather` holds
   hourly `precipitation_mm`; use the `rain_windows` view for 24/48/72-hour
   antecedent totals rather than adding accumulation columns, so the
@@ -307,8 +414,8 @@ lists who may see the private pages (`team`) and who may also see the
 viewer list (`admin`); everyone else, signed in or not, gets only the
 public pages. `app/access.py` says which page needs which level. Today only
 the About page is public: publishing anything derived from the Duro or
-CWQT data waits on Corinne (see "Operating notes" above). To publish a page,
-change its level to `'public'` in `access.py`.
+CWQT data waits on the project lead (see "Operating notes" above). To
+publish a page, change its level to `'public'` in `access.py`.
 
 ```bash
 cd data_import
@@ -447,9 +554,14 @@ Empty tables and what fills them:
    password was amended before it was ever pushed, pushed history
    contains no secrets, and the Supabase password has since been rotated,
    so the string that appears in older local git objects is dead.
-11. **Dashboard** — not started. Supabase's auto-generated REST API or a
-    direct Postgres connection (Looker Studio supports Postgres) both
-    work; point it at the views, not the tables.
+11. **Dashboards** — two first versions built; see "Dashboard" and
+    "Streamlit app" above. The static page in `dashboard/` is the
+    public-page option: plain files that drop onto any web host. The
+    Streamlit app in `app/` is the team dashboard, with Google sign-in,
+    to be hosted on Streamlit Community Cloud. Publishing either one waits
+    on the project lead's OK for the Duro and CWQT data. Still open:
+    refreshing the static page's data automatically once `main.py` runs
+    on a schedule (item 10).
 12. **RTA2 gaps (optional).** 17 of the 113 RTA2 report PDFs yielded no
     rows: weeks 1–8 (Jun–Aug 2024) use an earlier table layout with a
     `9SB` station and merged cells that defeat extraction (recoverable

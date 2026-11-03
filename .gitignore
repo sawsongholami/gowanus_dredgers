@@ -221,3 +221,11 @@ __marimo__/
 
 # macOS
 .DS_Store
+
+# Local Claude Code config and worktrees
+.claude/
+
+# Generated dashboard data: summaries of unpublished Duro data and of CWQT
+# data owned by another organisation. Regenerate with
+# `python dashboard/build_data.py`; commit only once publishing is approved.
+dashboard/data/

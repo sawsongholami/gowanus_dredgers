@@ -37,7 +37,17 @@ import write_to_db
 TABLE_NAME = 'weather'
 
 API_URL = 'https://archive-api.open-meteo.com/v1/archive'
-LATITUDE, LONGITUDE = 40.675, -73.990   # mid-canal, near Third Street
+# The point we ASK for: mid-canal, near the Fourth Street Basin. This is
+# not where the data comes from. Reanalysis has no notion of a point --
+# the API snaps any request to its own grid, and this one lands in a cell
+# centred 40.6678, -73.9377: about 4.5 km east-southeast, over inland
+# Brooklyn rather than the water. Checked year by year: the same cell is
+# served for every year 2012-2026, so the series has no location or model
+# discontinuity. Moving the request point does not help -- forcing era5
+# gives a cell 8.4 km out over the harbour, and era5_land returns no data
+# here. For canal-local rainfall the answer is gauge data (NOAA NCEI
+# Central Park), not a different grid cell.
+LATITUDE, LONGITUDE = 40.675, -73.990
 TIMEZONE = 'America/New_York'
 
 # Earliest date worth fetching: the CWQT bacteria record starts May 2012,
