@@ -143,8 +143,8 @@ carrying `rta_zone`), `rain_windows`
 (rolling 24/48/72-hour rainfall ending at each hour — the join target for
 "how much rain fell before this sample", which is what drives CSO
 discharges and the bacteria spikes that follow), and `daily_weather`
-(daily rain, peak hourly rain, wind). Planned: `turbidity` (long-format
-union of both turbidity eras with a `phase` column).
+(daily rain, peak hourly rain, wind), and `turbidity` (both turbidity
+eras in long format, one row per reading per buoy, with a `phase` column).
 
 Canonical site vocabulary: `duro.site` slugs (`Second_St`, `Douglass_St`,
 `Ninth_St_Bridge`, ...) assigned from GPS bounding boxes defined in the
@@ -432,8 +432,7 @@ Empty tables and what fills them:
 8. **Duro data catch-up** — `data/duro/` currently holds CSVs through
    Oct 2024. Newer outings (if any) live in Drive
    `Dredger_Duro_Data/1_Raw_CSVs/`; drop them in the folder and re-run.
-9. **`turbidity` union view** — add the long-format view over both
-   turbidity tables (design agreed, not yet in `schema.sql`).
+9. **`turbidity` union view** — done (2026-11-03); see the views above.
 10. **Automation** — `.github/workflows/daily_load.yml` runs the five
    loaders whose sources are online (cwqt, turbidity_rta2, weather,
    tide_predictions, observations) every day at 10:00 UTC, which also

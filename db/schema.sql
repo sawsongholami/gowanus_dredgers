@@ -291,6 +291,29 @@ SELECT
 FROM weather
 GROUP BY observed_at::date;
 
+-- Both turbidity eras in one long table: one row per reading per buoy,
+-- missing readings dropped. phase says which cleanup era (and stretch of
+-- canal) a row comes from. Station names are kept exactly as each era's
+-- columns spell them, so RTA1 n_3sb and RTA2 n3sb stay separate: whether
+-- they are the same instrument is unconfirmed (see README).
+CREATE OR REPLACE VIEW turbidity AS
+SELECT 'RTA1' AS phase, t.date + t.time AS measured_at, s.station, s.ntu,
+       t.source_report
+FROM turbidity_rta1 t
+CROSS JOIN LATERAL (VALUES
+    ('ambient', t.ambient), ('w_tb4', t.w_tb4), ('s_3sb', t.s_3sb),
+    ('n_usb',   t.n_usb),   ('s_csb', t.s_csb), ('s_usb', t.s_usb),
+    ('n_3sb',   t.n_3sb)
+) AS s(station, ntu)
+WHERE s.ntu IS NOT NULL
+UNION ALL
+SELECT 'RTA2', t.date + t.time, s.station, s.ntu, t.source_report
+FROM turbidity_rta2 t
+CROSS JOIN LATERAL (VALUES
+    ('ambient', t.ambient), ('n3sb', t.n3sb), ('tb4', t.tb4)
+) AS s(station, ntu)
+WHERE s.ntu IS NOT NULL;
+
 ------------------------------------------------------------------------
 -- Keep Supabase's public web API out. Supabase exposes the public schema
 -- through a REST API to two built-in roles, anon (anyone holding the
