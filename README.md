@@ -609,6 +609,13 @@ Empty tables and what fills them:
     `duro_filtered`; the weather import script's manually-pasted-
     spreadsheet mechanism should not be revived (see `weather` above),
     though its wind-name→degrees mapping is worth porting.
+14. **Share ownership of the hosting accounts.** As of 2026-11-03 the
+    GitHub repo, Render (billed to the maintainer's card), Supabase and the
+    Google Cloud project all sit in the maintainer's personal accounts.
+    Invite the project lead to each (GitHub collaborator, Render workspace
+    member, Supabase project member, Google Cloud project owner) so the
+    dashboard survives a handover; longer term, move them under a
+    Gowanus Dredgers organisation account.
 
 ## Drive sources already ruled out (audited 2026-09-16)
 
