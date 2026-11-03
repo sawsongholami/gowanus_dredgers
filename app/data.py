@@ -105,10 +105,6 @@ def oxygen_by_site():
     return df.round({'mean_do': 2, 'p10_do': 2, 'pct_below': 1})
 
 
-# Table names can't be bind parameters, so they come from this fixed list.
-_TURBIDITY_TABLES = {'RTA1': 'turbidity_rta1', 'RTA2': 'turbidity_rta2'}
-
-
 @st.cache_data(ttl=DATA_TTL, show_spinner='Loading turbidity...')
 def turbidity_weekly():
     """Weekly median and 90th percentile of the `ambient` station, per era.
@@ -117,21 +113,17 @@ def turbidity_weekly():
     they stay two series. Weeks with under 50 readings are dropped: part-weeks
     swing wildly.
     """
-    frames = []
-    for phase, table in _TURBIDITY_TABLES.items():
-        df = _read(f"""
-            SELECT date_trunc('week', date)::date                            AS week,
-                   percentile_cont(0.5) WITHIN GROUP (ORDER BY ambient)      AS median_ntu,
-                   percentile_cont(0.9) WITHIN GROUP (ORDER BY ambient)      AS p90_ntu,
-                   count(*)                                                  AS n
-            FROM {table}
-            WHERE ambient IS NOT NULL
-            GROUP BY 1
-            HAVING count(*) >= 50
-            ORDER BY 1
-        """)
-        df['phase'] = phase
-        frames.append(df)
-    out = pd.concat(frames, ignore_index=True)
+    out = _read("""
+        SELECT phase,
+               date_trunc('week', measured_at)::date                     AS week,
+               percentile_cont(0.5) WITHIN GROUP (ORDER BY ntu)          AS median_ntu,
+               percentile_cont(0.9) WITHIN GROUP (ORDER BY ntu)          AS p90_ntu,
+               count(*)                                                  AS n
+        FROM turbidity
+        WHERE station = 'ambient'
+        GROUP BY 1, 2
+        HAVING count(*) >= 50
+        ORDER BY 1, 2
+    """)
     out['week'] = pd.to_datetime(out['week'])
     return out.round({'median_ntu': 2, 'p90_ntu': 2})
