@@ -543,9 +543,14 @@ Empty tables and what fills them:
    password was amended before it was ever pushed, pushed history
    contains no secrets, and the Supabase password has since been rotated,
    so the string that appears in older local git objects is dead.
-11. **Dashboard** — first version built, see "Dashboard" below. Open
-    questions: which datasets may be published, and refreshing it
-    automatically once `main.py` runs on a schedule (item 10).
+11. **Dashboards** — two first versions built; see "Dashboard" and
+    "Streamlit app" above. The static page in `dashboard/` is the
+    public-page option: plain files that drop onto any web host. The
+    Streamlit app in `app/` is the team dashboard, with Google sign-in,
+    to be hosted on Streamlit Community Cloud. Publishing either one waits
+    on Corinne's OK for the Duro and CWQT data. Still open: refreshing
+    the static page's data automatically once `main.py` runs on a
+    schedule (item 10).
 12. **RTA2 gaps (optional).** 17 of the 113 RTA2 report PDFs yielded no
     rows: weeks 1–8 (Jun–Aug 2024) use an earlier table layout with a
     `9SB` station and merged cells that defeat extraction (recoverable
