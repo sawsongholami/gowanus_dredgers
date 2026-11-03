@@ -1,0 +1,8 @@
+# The Streamlit app's own dependencies. Streamlit Community Cloud installs
+# this file (the one next to the entry point), not the repo-root one, which
+# carries the loaders' PDF and Excel libraries the app doesn't need.
+streamlit[auth]>=1.66
+altair>=5
+pandas
+sqlalchemy>=2
+psycopg2-binary

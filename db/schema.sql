@@ -172,6 +172,23 @@ CREATE TABLE IF NOT EXISTS observations (
 );
 
 ------------------------------------------------------------------------
+-- Who may see the Streamlit app's private pages (app/access.py). One row
+-- per Google account; anyone not listed sees only the public pages.
+-- Managed with data_import/viewers.py. Emails are stored lower-case.
+-- Row-level security is on with no policy for Supabase's anon and
+-- authenticated roles, so the public REST API can't list these emails;
+-- db/app_reader.sql grants the app's read-only login a policy to read it.
+------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS app_viewers (
+    email    text PRIMARY KEY CHECK (email = lower(email)),
+    role     text NOT NULL CHECK (role IN ('team', 'admin')),
+    note     text,         -- who they are / why they have access
+    added_at timestamptz NOT NULL DEFAULT now()
+);
+
+ALTER TABLE app_viewers ENABLE ROW LEVEL SECURITY;
+
+------------------------------------------------------------------------
 -- Views: computed on demand, no data duplicated. Dashboards should read
 -- from views rather than tables, so table changes stay invisible to them.
 ------------------------------------------------------------------------
