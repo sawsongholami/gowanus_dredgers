@@ -464,7 +464,8 @@ venv-app/bin/pytest tests/
 venv-app/bin/streamlit run app/streamlit_app.py
 ```
 
-**One-time setup** (steps 1–5 done 2026-11-03):
+**One-time setup** (all done 2026-11-03; kept as the record of how, and
+for rebuilding it elsewhere):
 
 1. **Check Supabase is awake.** Free projects pause after a week without
    activity, and a paused project makes the app (and every loader) fail.
@@ -590,7 +591,8 @@ Empty tables and what fills them:
     "Streamlit app" above. The static page in `dashboard/` is the
     public-page option: plain files that drop onto any web host. The
     Streamlit app in `app/` is the team dashboard, with Google sign-in,
-    hosted on Render. Publishing either one waits
+    live on Render since 2026-11-03 for the four-person team (all admin;
+    Google test users plus the viewer list). Publishing either one waits
     on the project lead's OK for the Duro and CWQT data. Still open:
     refreshing the static page's data automatically once `main.py` runs
     on a schedule (item 10).
