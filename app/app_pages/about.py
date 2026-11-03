@@ -16,7 +16,9 @@ today?* and *how does rain change the water?*
 **Sources**
 
 - **Duro sonde** — the Dredgers' own field instrument: dissolved oxygen,
-  temperature, salinity and more, logged on canal outings.
+  temperature, salinity and more, logged on canal outings from August 2023
+  to October 2024. The sonde is now out of service, so no new readings are
+  coming in.
 - **Citizens' Water Quality Testing (CWQT)** — weekly Enterococcus (bacteria)
   sampling, with SwimmableNYC and the Billion Oyster Project.
 - **Gowanus Superfund turbidity monitoring** — 15-minute readings published

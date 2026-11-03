@@ -8,7 +8,7 @@ and summary tables it charts and nothing else -- not `duro` directly, not
 case is someone reading what the team can already see.
 
 Credentials come from st.secrets ([database] in .streamlit/secrets.toml
-locally, the Secrets box on Streamlit Community Cloud).
+locally, the secrets.toml Secret File on Render).
 
 Aggregation follows the same rules as the static dashboard's build_data.py
 so the two agree: weekly turbidity medians over full weeks only, DO sites

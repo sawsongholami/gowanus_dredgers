@@ -128,7 +128,7 @@ python duro.py --dry-run   # every loader supports --dry-run (parse, no write)
 
 | Table | Grain | Status (Sept 2026) | Source |
 |---|---|---|---|
-| `duro` | one row per ~30s sonde reading | **21,000 rows**, Aug 2023 – Oct 2024 | Raw daily CSVs from the Duro UAS sonde, in Drive `Dredger_Duro_Data/1_Raw_CSVs/` (copy into `data/duro/` and run `duro.py`) |
+| `duro` | one row per ~30s sonde reading | **21,000 rows**, Aug 2023 – Oct 2024. **Closed: the sonde is broken** (reported 2026-11-03), no replacement planned | Raw daily CSVs from the Duro UAS sonde, in Drive `Dredger_Duro_Data/1_Raw_CSVs/` (copy into `data/duro/` and run `duro.py`) |
 | `cwqt` | one row per weekly Enterococcus sample | **507 rows**, May 2012 – Sept 2026, 6 sites | CWQT Master Data Sheet (citywide program, live) + "Enterococcus at 2nd St" sheet (winter 2023-24, off-season) |
 | `turbidity_rta2` | one row per 15-min turbidity reading | **17,409 rows**, Aug 2024 – Aug 2026 | Weekly WQM report PDFs at gowanussuperfund.com (auto-discovered and scraped) |
 | `turbidity_rta1` | one row per 15-min turbidity reading | **20,795 rows**, Aug 2023 – Apr 2024 | `GRT_Reports.xlsx` (transcription of the RTA1-era PDFs) + `together_data.xlsx` (fills a Feb–Mar 2024 gap), both hand-downloaded into `data/turbidity_rta1/` |
@@ -215,8 +215,8 @@ until the project lead approves publishing them. Run
 
 **The Streamlit side is now built, as one app rather than a pair.** The
 plan was a public Streamlit app and a private one. What got built (see
-"Streamlit app" below) is a single app in `app/`, hosted on Streamlit
-Community Cloud, where Google sign-in decides which pages a viewer sees.
+"Streamlit app" below) is a single app in `app/`, hosted on Render, where
+Google sign-in decides which pages a viewer sees.
 The split is now: this static page as the public-page option, and the
 Streamlit app as the team dashboard. Publishing either one waits on the
 project lead.
@@ -406,8 +406,18 @@ The controls below are sized to that reality.
 
 ## Streamlit app
 
-`app/` is the team's dashboard, hosted free on Streamlit Community Cloud.
-It reads Supabase live, so it is current as soon as a loader runs.
+`app/` is the team's dashboard, hosted free on Render at
+https://gowanus-dredgers.onrender.com. It reads Supabase live, so it is
+current as soon as a loader runs.
+
+**Why Render, not Streamlit Community Cloud.** Community Cloud deploys
+only through a GitHub sign-in that grants it admin rights over webhooks
+on every repo the account administers, plus read access to its
+organisations, with no way to narrow it. On an account that also belongs
+to a work organisation, that reaches into the employer's repos. Render
+connects through a GitHub App that can be installed on this one repo
+only. The trade-off: Render's free tier sleeps after about 15 idle
+minutes, so the first visit after a quiet spell takes ~30 seconds.
 
 **Who sees what.** Visitors sign in with Google. The `app_viewers` table
 lists who may see the private pages (`team`) and who may also see the
@@ -454,7 +464,7 @@ venv-app/bin/pytest tests/
 venv-app/bin/streamlit run app/streamlit_app.py
 ```
 
-**One-time setup** (none of this is done yet):
+**One-time setup** (steps 1–5 done 2026-11-03):
 
 1. **Check Supabase is awake.** Free projects pause after a week without
    activity, and a paused project makes the app (and every loader) fail.
@@ -469,28 +479,46 @@ venv-app/bin/streamlit run app/streamlit_app.py
    `openid`, `email`, `profile`). Then create an OAuth client
    (*Web application*) with two authorised redirect URIs:
    `http://localhost:8501/oauth2callback` and
-   `https://<your-app>.streamlit.app/oauth2callback`. While the consent
+   `https://gowanus-dredgers.onrender.com/oauth2callback`. While the consent
    screen is in *Testing*, only people listed as test users can sign in.
    To **publish it to production**, Google wants, on the *Branding* page:
-   home page `https://<your-app>.streamlit.app`, privacy policy
-   `https://<your-app>.streamlit.app/privacy` (the app's public Privacy
-   page), and authorised domain `<your-app>.streamlit.app` (allowed because
-   `streamlit.app` is on the public suffix list, so each app's address
-   counts as its own domain). Leave the logo empty: uploading one triggers
-   Google's verification review. Publishing needs the app deployed first,
-   so deploy in Testing with yourself as a test user, then publish.
-6. **Deploy.** At share.streamlit.io, sign in with GitHub, *Create app*,
-   pick this repo and branch, main file `app/streamlit_app.py`. Under
-   *Advanced settings* choose Python 3.12 and paste the contents of your
-   filled-in `.streamlit/secrets.toml`, with `redirect_uri` changed to the
-   deployed address. Leave the app's own sharing setting public: the
-   sign-in decides who sees data.
+   home page `https://gowanus-dredgers.onrender.com`, privacy policy
+   `https://gowanus-dredgers.onrender.com/privacy` (the app's public
+   Privacy page), and authorised domain `gowanus-dredgers.onrender.com`
+   (allowed because `onrender.com` is on the public suffix list, so each
+   app's address counts as its own domain). Leave the logo empty:
+   uploading one triggers Google's verification review.
+   **The app deliberately stays in Testing, not published**: Google then
+   refuses sign-in to anyone not on its *Audience > Test users* list, a
+   second lock in front of the app's own viewer list. So each viewer is
+   added in both places (test users, then `viewers.py add`) and removed
+   from both. Test users see a one-time "Google hasn't verified this app"
+   screen and click *Continue*. Because the app asks only for name, email
+   and profile, Testing's 7-day sign-in expiry doesn't apply. Publish only
+   if the list outgrows hand upkeep (cap: 100 test users); the viewer list
+   alone still guards the data.
+6. **Deploy on Render.** Sign up at render.com with your Gmail (not
+   "Sign in with GitHub"). *New > Web Service > GitHub*; when GitHub asks
+   where to install the Render app, pick your personal account and **Only
+   select repositories > this repo**. Then:
+   - Name `gowanus-dredgers`, branch `main`, region Ohio (next to
+     Supabase), language Python 3, instance type Free.
+   - Build command: `pip install -r app/requirements.txt`
+   - Start command: `streamlit run app/streamlit_app.py --server.port
+     $PORT --server.address 0.0.0.0 --server.headless true
+     --secrets.files /etc/secrets/secrets.toml`
+   - *Environment*: variable `PYTHON_VERSION` = `3.12.7`; and a *Secret
+     File* named `secrets.toml` holding your filled-in
+     `.streamlit/secrets.toml`, with `redirect_uri` changed to the
+     deployed address.
+   - *Settings > Health Check Path*: `/_stcore/health`.
+   Leave the service public: the sign-in decides who sees data.
 7. **Check it:** open the app in a private window (only About should
    show), then sign in.
 
 Pushes to the deployed branch redeploy the app automatically. Secrets and
-settings live only in the Community Cloud website, so they are the one
-part an agent can't change.
+settings live only in the Render dashboard, so they are the one part an
+agent can't change.
 
 ## Remaining work
 
@@ -536,9 +564,13 @@ Empty tables and what fills them:
    this project has not yet opened; DEP also publishes harbor survey data
    on NYC Open Data. Would give the Dredgers' own sonde readings an
    independent agency baseline to compare against.
-8. **Duro data catch-up** — `data/duro/` currently holds CSVs through
-   Oct 2024. Newer outings (if any) live in Drive
-   `Dredger_Duro_Data/1_Raw_CSVs/`; drop them in the folder and re-run.
+8. **Duro is closed.** The sonde broke (reported 2026-11-03) and no
+   replacement is planned, so `duro` (Aug 21, 2023 – Oct 18, 2024) is now a
+   finished historical dataset. One last check before calling it final: look
+   in Drive `Dredger_Duro_Data/1_Raw_CSVs/` for any outing after Oct 18,
+   2024; if there is one, drop it in `data/duro/` and re-run `duro.py`. If a
+   new instrument arrives, check its file format against the two Duro
+   formats in "Data quirks" before reusing `duro.py`.
 9. **`turbidity` union view** — done (2026-11-03); see the views above.
 10. **Automation** — `.github/workflows/daily_load.yml` runs the five
    loaders whose sources are online (cwqt, turbidity_rta2, weather,
@@ -558,7 +590,7 @@ Empty tables and what fills them:
     "Streamlit app" above. The static page in `dashboard/` is the
     public-page option: plain files that drop onto any web host. The
     Streamlit app in `app/` is the team dashboard, with Google sign-in,
-    to be hosted on Streamlit Community Cloud. Publishing either one waits
+    hosted on Render. Publishing either one waits
     on the project lead's OK for the Duro and CWQT data. Still open:
     refreshing the static page's data automatically once `main.py` runs
     on a schedule (item 10).
