@@ -213,16 +213,13 @@ data and CWQT data that belongs to another organisation, so they stay out
 until the project lead approves publishing them. Run
 `python dashboard/build_data.py` to regenerate them locally.
 
-**Planned: a Streamlit pair, public and private.** The brief has since
-changed — the tool should be editable by an AI agent, and there should be
-a public dashboard and a private one. The intended shape, not yet built:
-a shared module holding the loaders and the publish policy, a public app
-carrying aggregates only, and a private app with row-level detail, the
-observation survey and the data-quality views. The open question is
-whether the Urban Data Response site can host a Streamlit app at all; if
-it is a third-party-managed site with only an upload folder, the split
-becomes static-public and Streamlit-private, which is the arrangement
-already settled on for the Accelerate data-layer project.
+**The Streamlit side is now built, as one app rather than a pair.** The
+plan was a public Streamlit app and a private one. What got built (see
+"Streamlit app" below) is a single app in `app/`, hosted on Streamlit
+Community Cloud, where Google sign-in decides which pages a viewer sees.
+The split is now: this static page as the public-page option, and the
+Streamlit app as the team dashboard. Publishing either one waits on the
+project lead.
 
 **Why the public page here is static.** Streamlit is a server: to put it
 on the Urban Data Response site you would host the app somewhere else and
