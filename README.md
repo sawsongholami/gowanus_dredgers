@@ -487,8 +487,16 @@ venv-app/bin/streamlit run app/streamlit_app.py
    Privacy page), and authorised domain `gowanus-dredgers.onrender.com`
    (allowed because `onrender.com` is on the public suffix list, so each
    app's address counts as its own domain). Leave the logo empty:
-   uploading one triggers Google's verification review. Publishing needs the app deployed first,
-   so deploy in Testing with yourself as a test user, then publish.
+   uploading one triggers Google's verification review.
+   **The app deliberately stays in Testing, not published**: Google then
+   refuses sign-in to anyone not on its *Audience > Test users* list, a
+   second lock in front of the app's own viewer list. So each viewer is
+   added in both places (test users, then `viewers.py add`) and removed
+   from both. Test users see a one-time "Google hasn't verified this app"
+   screen and click *Continue*. Because the app asks only for name, email
+   and profile, Testing's 7-day sign-in expiry doesn't apply. Publish only
+   if the list outgrows hand upkeep (cap: 100 test users); the viewer list
+   alone still guards the data.
 6. **Deploy on Render.** Sign up at render.com with your Gmail (not
    "Sign in with GitHub"). *New > Web Service > GitHub*; when GitHub asks
    where to install the Render app, pick your personal account and **Only
