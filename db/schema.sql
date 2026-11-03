@@ -290,3 +290,19 @@ SELECT
     round(max(wind_gusts_kmh)::numeric, 1)   AS max_gust_kmh
 FROM weather
 GROUP BY observed_at::date;
+
+------------------------------------------------------------------------
+-- Keep Supabase's public web API out. Supabase exposes the public schema
+-- through a REST API to two built-in roles, anon (anyone holding the
+-- project's public key) and authenticated, and grants them SELECT on
+-- every new table and view. Row-level security already hides table rows
+-- from them, but a view runs with its owner's rights and skips that --
+-- so without this, duro_filtered handed the Dredgers' unpublished
+-- readings to anyone with the key. Nothing in this project uses that API;
+-- the loaders and the Streamlit app connect to Postgres directly.
+-- Kept here, at the end, so every schema apply re-asserts it, including
+-- for objects added above. The default-privileges line stops Supabase
+-- granting these roles access to objects this login creates later.
+------------------------------------------------------------------------
+REVOKE ALL ON ALL TABLES IN SCHEMA public FROM anon, authenticated;
+ALTER DEFAULT PRIVILEGES IN SCHEMA public REVOKE ALL ON TABLES FROM anon, authenticated;
