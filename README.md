@@ -86,6 +86,14 @@ db/schema.sql         complete database definition (tables + views)
 forms/create_observation_form.gs
                       Apps Script that built the observation Google Form;
                       the reference copy of every question and option
+app/                  the Streamlit app (see "Streamlit app" below)
+  streamlit_app.py    entry point: who is viewing, which pages they get
+  access.py           the access rules: which page needs which level
+  data.py             read-only queries and summaries
+  app_pages/          one file per page
+db/app_reader.sql     one-time setup of the app's read-only login
+data_import/viewers.py  add/remove people who can see the app
+tests/                the app's access tests (pytest tests/)
 data/                 local file cache, not part of git. Raw inputs named
                       by the table they feed:
   duro/               229 daily sonde CSVs (the loader's input)
@@ -288,6 +296,86 @@ The controls below are sized to that reality.
   replaced. Mitigation: have a second person run `python main.py` from a
   clean clone before that knowledge lives in one head, and keep this
   README honest about what is verified versus assumed.
+
+## Streamlit app
+
+`app/` is the team's dashboard, hosted free on Streamlit Community Cloud.
+It reads Supabase live, so it is current as soon as a loader runs.
+
+**Who sees what.** Visitors sign in with Google. The `app_viewers` table
+lists who may see the private pages (`team`) and who may also see the
+viewer list (`admin`); everyone else, signed in or not, gets only the
+public pages. `app/access.py` says which page needs which level. Today only
+the About page is public: publishing anything derived from the Duro or
+CWQT data waits on Corinne (see "Operating notes" above). To publish a page,
+change its level to `'public'` in `access.py`.
+
+```bash
+cd data_import
+python viewers.py add someone@gmail.com team "Dredgers board"
+python viewers.py remove someone@gmail.com
+python viewers.py list
+```
+
+**Why the gate is in the app, not the host.** Normally the host blocks
+strangers before they reach the app, and the app checks again. Here that
+host-level gate is either paid (Streamlit only allows one private app,
+invite-only through its website) or needs a Google Workspace organisation
+(Cloud Run's IAP), so the app's own check is the only barrier. That is
+a deliberate trade-off, and it is why:
+
+- a page the viewer can't see is never registered with `st.navigation`,
+  so it has no URL; each page also re-checks at the top;
+- everything fails closed (unknown page, unknown role, unverified email or
+  an unreachable viewer list all mean public);
+- the app connects as `app_reader`, a read-only login with no access to
+  `duro` or `observations` (`db/app_reader.sql`), never the owner login
+  in `.env`;
+- `tests/test_app_access.py` checks that signed-out and unlisted viewers
+  can't open a private page and never trigger a data query. Run it after
+  any change to `app/`, and keep `observations` off the app until there is
+  a reason to show it.
+
+**Running it locally.** Streamlit needs Python 3.11 or newer (the loaders'
+venv is 3.9, so use a separate one). From the repo root:
+
+```bash
+python3.12 -m venv venv-app
+venv-app/bin/pip install -r app/requirements.txt pytest
+cp .streamlit/secrets.toml.example .streamlit/secrets.toml   # fill it in
+venv-app/bin/pytest tests/
+venv-app/bin/streamlit run app/streamlit_app.py
+```
+
+**One-time setup** (none of this is done yet):
+
+1. **Check Supabase is awake.** Free projects pause after a week without
+   activity, and a paused project makes the app (and every loader) fail.
+   Restore it from the Supabase dashboard if needed.
+2. **Create the viewer table:** `python data_import/apply_schema.py`.
+3. **Create the read-only login:** open `db/app_reader.sql`, paste it into
+   the Supabase SQL editor with a new long random password in place of the
+   placeholder, and run it. Save the password only in the Secrets below.
+4. **Add yourself:** `python data_import/viewers.py add you@gmail.com admin`.
+5. **Google sign-in.** In Google Cloud Console, create a project; under
+   *Google Auth Platform*, set up the consent screen (External; scopes
+   `openid`, `email`, `profile`) and **publish it to production** (until
+   then only listed test users can sign in). Then create an OAuth client
+   (*Web application*) with two authorised redirect URIs:
+   `http://localhost:8501/oauth2callback` and
+   `https://<your-app>.streamlit.app/oauth2callback`.
+6. **Deploy.** At share.streamlit.io, sign in with GitHub, *Create app*,
+   pick this repo and branch, main file `app/streamlit_app.py`. Under
+   *Advanced settings* choose Python 3.12 and paste the contents of your
+   filled-in `.streamlit/secrets.toml`, with `redirect_uri` changed to the
+   deployed address. Leave the app's own sharing setting public: the
+   sign-in decides who sees data.
+7. **Check it:** open the app in a private window (only About should
+   show), then sign in.
+
+Pushes to the deployed branch redeploy the app automatically. Secrets and
+settings live only in the Community Cloud website, so they are the one
+part an agent can't change.
 
 ## Remaining work
 
