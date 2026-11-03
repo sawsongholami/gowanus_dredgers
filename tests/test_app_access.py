@@ -103,8 +103,8 @@ def test_unknown_page_and_role_fail_closed():
     assert access.viewer_level(None, lambda e: 'admin') == 'public'
 
 
-def test_only_about_is_public_until_corinne_agrees():
-    assert [p for p, lvl in access.PAGE_ACCESS.items() if lvl == 'public'] == ['about']
+def test_only_data_free_pages_are_public_until_corinne_agrees():
+    assert [p for p, lvl in access.PAGE_ACCESS.items() if lvl == 'public'] == ['about', 'privacy']
 
 
 # --- The running app --------------------------------------------------------
@@ -121,6 +121,7 @@ def test_public_viewers_see_only_about_and_trigger_no_queries(viewer, email, rol
     assert _titles(at) == ['Gowanus Canal water data']
     for page in PRIVATE_PAGES:
         assert _run(page) is None, f'{page} was reachable'
+    assert _titles(_run('privacy')) == ['Privacy']
     assert calls == []
 
 

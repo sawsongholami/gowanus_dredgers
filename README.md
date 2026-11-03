@@ -466,11 +466,19 @@ venv-app/bin/streamlit run app/streamlit_app.py
 4. **Add yourself:** `python data_import/viewers.py add you@gmail.com admin`.
 5. **Google sign-in.** In Google Cloud Console, create a project; under
    *Google Auth Platform*, set up the consent screen (External; scopes
-   `openid`, `email`, `profile`) and **publish it to production** (until
-   then only listed test users can sign in). Then create an OAuth client
+   `openid`, `email`, `profile`). Then create an OAuth client
    (*Web application*) with two authorised redirect URIs:
    `http://localhost:8501/oauth2callback` and
-   `https://<your-app>.streamlit.app/oauth2callback`.
+   `https://<your-app>.streamlit.app/oauth2callback`. While the consent
+   screen is in *Testing*, only people listed as test users can sign in.
+   To **publish it to production**, Google wants, on the *Branding* page:
+   home page `https://<your-app>.streamlit.app`, privacy policy
+   `https://<your-app>.streamlit.app/privacy` (the app's public Privacy
+   page), and authorised domain `<your-app>.streamlit.app` (allowed because
+   `streamlit.app` is on the public suffix list, so each app's address
+   counts as its own domain). Leave the logo empty: uploading one triggers
+   Google's verification review. Publishing needs the app deployed first,
+   so deploy in Testing with yourself as a test user, then publish.
 6. **Deploy.** At share.streamlit.io, sign in with GitHub, *Create app*,
    pick this repo and branch, main file `app/streamlit_app.py`. Under
    *Advanced settings* choose Python 3.12 and paste the contents of your
@@ -533,9 +541,16 @@ Empty tables and what fills them:
    `Dredger_Duro_Data/1_Raw_CSVs/`; drop them in the folder and re-run.
 9. **`turbidity` union view** — add the long-format view over both
    turbidity tables (design agreed, not yet in `schema.sql`).
-10. **Automation** — everything currently runs by hand. Plan: a GitHub
-   Actions scheduled workflow running `python main.py` (needs the repo
-   pushed to GitHub and `.env` values as repo secrets). Credentials are
+10. **Automation** — `.github/workflows/daily_load.yml` runs the five
+   loaders whose sources are online (cwqt, turbidity_rta2, weather,
+   tide_predictions, observations) every day at 10:00 UTC, which also
+   keeps the free Supabase project from pausing. Free on a public repo.
+   It needs the four `.env` values as repository secrets, and GitHub only
+   runs a schedule from the default branch. A failed loader fails the run
+   and GitHub emails the owner. duro and turbidity_rta1 still run by hand:
+   their inputs are files downloaded into `data/`. GitHub switches off a
+   public repo's schedules after 60 days without a commit (it emails
+   first; one click turns it back on). Credentials are
    clean as of 2026-09-16: the commit that once hardcoded the database
    password was amended before it was ever pushed, pushed history
    contains no secrets, and the Supabase password has since been rotated,

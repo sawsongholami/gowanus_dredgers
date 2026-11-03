@@ -1,0 +1,70 @@
+# Daily load: refreshes every table whose source is online, so the
+# Streamlit app stays current and the free Supabase project never sits
+# idle long enough to pause (it pauses after a week without activity).
+#
+# Runs the loaders one step each, so one failing source doesn't stop the
+# rest, but any failure still marks the run failed and GitHub emails the
+# repo owner. Not run here: duro.py and turbidity_rta1.py, whose inputs are
+# files downloaded by hand into data/ (gitignored); run those locally.
+#
+# Needs four repository secrets (Settings > Secrets and variables >
+# Actions), the same values as .env: SUPABASE_DB_HOST, SUPABASE_DB_PORT,
+# SUPABASE_DB_USER, SUPABASE_DB_PASSWORD.
+#
+# Scheduled runs only fire from the default branch. Run it by hand from
+# the Actions tab ("Run workflow").
+
+name: Daily load
+
+on:
+  schedule:
+    - cron: '0 10 * * *'   # 10:00 UTC = 5-6 a.m. in New York
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: daily-load
+  cancel-in-progress: false
+
+jobs:
+  load:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      SUPABASE_DB_HOST: ${{ secrets.SUPABASE_DB_HOST }}
+      SUPABASE_DB_PORT: ${{ secrets.SUPABASE_DB_PORT }}
+      SUPABASE_DB_USER: ${{ secrets.SUPABASE_DB_USER }}
+      SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+    defaults:
+      run:
+        working-directory: data_import
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r ../requirements.txt
+
+      # `if: !cancelled()` keeps later loaders running after an earlier one
+      # fails; the run as a whole still ends up failed.
+      - name: CWQT Enterococcus -> cwqt
+        if: ${{ !cancelled() }}
+        run: python cwqt.py
+      - name: RTA2 turbidity PDFs -> turbidity_rta2
+        if: ${{ !cancelled() }}
+        # Only the newest reports: the runner starts with no PDF cache, and
+        # re-downloading all 100+ every day would hammer the Superfund site.
+        # Rows are upserted, so re-reading a report already loaded is harmless.
+        run: python turbidity_rta2.py --limit 4
+      - name: Open-Meteo weather -> weather
+        if: ${{ !cancelled() }}
+        run: python weather.py
+      - name: NOAA tide predictions -> tide_predictions
+        if: ${{ !cancelled() }}
+        run: python tide_predictions.py
+      - name: Observation survey -> observations
+        if: ${{ !cancelled() }}
+        run: python observations.py

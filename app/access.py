@@ -15,7 +15,7 @@ in case a future edit registers a page by mistake.
 Everything fails closed: a page missing from PAGE_ACCESS, an unknown role,
 an unverified email or an unreachable viewer list all mean 'public'.
 
-Nothing beyond the About page is public yet. The Duro readings are the
+Nothing beyond the About and Privacy pages, which hold no data, is public yet. The Duro readings are the
 Dredgers' own unpublished data and the CWQT figures belong to another
 organisation, so publishing even aggregates is Corinne's call (README,
 "Operating notes"). To publish a page once she agrees, set it to 'public'.
@@ -27,6 +27,7 @@ LEVELS = ('public', 'team', 'admin')
 
 PAGE_ACCESS = {
     'about': 'public',
+    'privacy': 'public',   # no data; Google sign-in needs a public privacy policy link
     'bacteria': 'team',
     'oxygen': 'team',
     'turbidity': 'team',
