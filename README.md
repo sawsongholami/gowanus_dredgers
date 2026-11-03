@@ -417,8 +417,8 @@ lists who may see the private pages (`team`) and who may also see the
 viewer list (`admin`); everyone else, signed in or not, gets only the
 public pages. `app/access.py` says which page needs which level. Today only
 the About page is public: publishing anything derived from the Duro or
-CWQT data waits on Corinne (see "Operating notes" above). To publish a page,
-change its level to `'public'` in `access.py`.
+CWQT data waits on the project lead (see "Operating notes" above). To
+publish a page, change its level to `'public'` in `access.py`.
 
 ```bash
 cd data_import
@@ -548,9 +548,9 @@ Empty tables and what fills them:
     public-page option: plain files that drop onto any web host. The
     Streamlit app in `app/` is the team dashboard, with Google sign-in,
     to be hosted on Streamlit Community Cloud. Publishing either one waits
-    on Corinne's OK for the Duro and CWQT data. Still open: refreshing
-    the static page's data automatically once `main.py` runs on a
-    schedule (item 10).
+    on the project lead's OK for the Duro and CWQT data. Still open:
+    refreshing the static page's data automatically once `main.py` runs
+    on a schedule (item 10).
 12. **RTA2 gaps (optional).** 17 of the 113 RTA2 report PDFs yielded no
     rows: weeks 1–8 (Jun–Aug 2024) use an earlier table layout with a
     `9SB` station and merged cells that defeat extraction (recoverable
