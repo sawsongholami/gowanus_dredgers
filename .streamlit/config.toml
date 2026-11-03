@@ -1,0 +1,6 @@
+# Streamlit settings for the app, read wherever it runs from the repo root.
+
+[browser]
+# Off so the Privacy page's "nothing about your visit is stored" stays true:
+# by default each visitor's browser reports usage statistics to Streamlit.
+gatherUsageStats = false
