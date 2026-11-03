@@ -464,7 +464,8 @@ venv-app/bin/pytest tests/
 venv-app/bin/streamlit run app/streamlit_app.py
 ```
 
-**One-time setup** (steps 1–5 done 2026-11-03):
+**One-time setup** (all done 2026-11-03; kept as the record of how, and
+for rebuilding it elsewhere):
 
 1. **Check Supabase is awake.** Free projects pause after a week without
    activity, and a paused project makes the app (and every loader) fail.
@@ -590,7 +591,8 @@ Empty tables and what fills them:
     "Streamlit app" above. The static page in `dashboard/` is the
     public-page option: plain files that drop onto any web host. The
     Streamlit app in `app/` is the team dashboard, with Google sign-in,
-    hosted on Render. Publishing either one waits
+    live on Render since 2026-11-03 for the four-person team (all admin;
+    Google test users plus the viewer list). Publishing either one waits
     on the project lead's OK for the Duro and CWQT data. Still open:
     refreshing the static page's data automatically once `main.py` runs
     on a schedule (item 10).
@@ -607,6 +609,13 @@ Empty tables and what fills them:
     `duro_filtered`; the weather import script's manually-pasted-
     spreadsheet mechanism should not be revived (see `weather` above),
     though its wind-name→degrees mapping is worth porting.
+14. **Share ownership of the hosting accounts.** As of 2026-11-03 the
+    GitHub repo, Render (billed to the maintainer's card), Supabase and the
+    Google Cloud project all sit in the maintainer's personal accounts.
+    Invite the project lead to each (GitHub collaborator, Render workspace
+    member, Supabase project member, Google Cloud project owner) so the
+    dashboard survives a handover; longer term, move them under a
+    Gowanus Dredgers organisation account.
 
 ## Drive sources already ruled out (audited 2026-09-16)
 
@@ -642,3 +651,15 @@ So nobody re-investigates these. In the shared drive's
 - The response spreadsheet is already shared "Anyone with link: Viewer"
   (required by `observations.py`). GRT_Reports is deliberately NOT
   link-shared; its loader reads a hand-downloaded CSV instead.
+- Set up 2026-11-03 for the app and daily load: the `app_reader` login's
+  password (set by hand in the Supabase SQL editor; it lives only in the
+  app's secret file on Render and the maintainer's local
+  `.streamlit/secrets.toml`), the four `SUPABASE_DB_*` repository secrets
+  on GitHub (Settings > Secrets and variables > Actions), a Google Cloud
+  project with the OAuth client for sign-in, and the Render service (its
+  GitHub App installed on this repo only). The workflow file itself was
+  added through the GitHub website.
+- The GitHub login AI agents use on the owner's Mac is a fine-grained
+  token limited to this repo: it can push code and open and merge pull
+  requests, but cannot change workflows, secrets or settings, or start
+  Actions runs. Those are done by the owner in the browser.
