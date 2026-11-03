@@ -651,3 +651,15 @@ So nobody re-investigates these. In the shared drive's
 - The response spreadsheet is already shared "Anyone with link: Viewer"
   (required by `observations.py`). GRT_Reports is deliberately NOT
   link-shared; its loader reads a hand-downloaded CSV instead.
+- Set up 2026-11-03 for the app and daily load: the `app_reader` login's
+  password (set by hand in the Supabase SQL editor; it lives only in the
+  app's secret file on Render and the maintainer's local
+  `.streamlit/secrets.toml`), the four `SUPABASE_DB_*` repository secrets
+  on GitHub (Settings > Secrets and variables > Actions), a Google Cloud
+  project with the OAuth client for sign-in, and the Render service (its
+  GitHub App installed on this repo only). The workflow file itself was
+  added through the GitHub website.
+- The GitHub login AI agents use on the owner's Mac is a fine-grained
+  token limited to this repo: it can push code and open and merge pull
+  requests, but cannot change workflows, secrets or settings, or start
+  Actions runs. Those are done by the owner in the browser.
