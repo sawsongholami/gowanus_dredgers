@@ -16,16 +16,26 @@ import streamlit as st
 import access
 import data
 
-st.set_page_config(page_title='Gowanus Dredgers water data', page_icon='🌊', layout='wide')
+st.set_page_config(page_title='Gowanus Dredgers water data', layout='wide',
+                   initial_sidebar_state='expanded')
+
+# Keep the sidebar (the page list) open: hide its collapse button on screens
+# wide enough to show it beside the page. Phones keep the button, since there
+# the sidebar covers the page and has to be closable.
+st.markdown('''<style>
+@media (min-width: 768px) {
+    [data-testid="stSidebarCollapseButton"] { display: none; }
+}
+</style>''', unsafe_allow_html=True)
 
 PAGES = {
-    'about': st.Page('app_pages/about.py', title='About', icon='🏠', default=True),
-    'bacteria': st.Page('app_pages/bacteria.py', title='Bacteria', icon='🦠'),
-    'oxygen': st.Page('app_pages/oxygen.py', title='Dissolved oxygen', icon='🐟'),
-    'turbidity': st.Page('app_pages/turbidity.py', title='Turbidity', icon='🌫️'),
-    'viewers': st.Page('app_pages/viewers.py', title='Who can see this', icon='🔑'),
+    'about': st.Page('app_pages/about.py', title='About', default=True),
+    'bacteria': st.Page('app_pages/bacteria.py', title='Bacteria'),
+    'oxygen': st.Page('app_pages/oxygen.py', title='Dissolved oxygen'),
+    'turbidity': st.Page('app_pages/turbidity.py', title='Turbidity'),
+    'viewers': st.Page('app_pages/viewers.py', title='Who can see this'),
     # Fixed URL (/privacy): it is the privacy policy link on Google's sign-in screen.
-    'privacy': st.Page('app_pages/privacy.py', title='Privacy', icon='🔒', url_path='privacy'),
+    'privacy': st.Page('app_pages/privacy.py', title='Privacy', url_path='privacy'),
 }
 
 email = access.current_email()
