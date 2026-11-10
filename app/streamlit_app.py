@@ -50,6 +50,7 @@ st.markdown('''<style>
 .st-key-menu_current [data-testid="stPageLink-NavLink"] p { font-weight: 600; }
 /* The section list (stMarkdown, not the page link's own label): bulleted,
    indented past the page name, a size smaller. */
+.st-key-menu_current [data-testid="stMarkdown"] [data-testid="stMarkdownContainer"] { margin-bottom: 0; }
 .st-key-menu_current [data-testid="stMarkdown"] ul { margin: 0; padding-left: 2rem; }
 .st-key-menu_current [data-testid="stMarkdown"] li {
     margin: 0 0.5rem 0.35rem 0; padding: 0; font-size: 0.8rem; line-height: 1.35;
