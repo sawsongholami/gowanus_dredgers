@@ -422,6 +422,16 @@ connects through a GitHub App that can be installed on this one repo
 only. The trade-off: Render's free tier sleeps after about 15 idle
 minutes, so the first visit after a quiet spell takes ~30 seconds.
 
+**Why the build swaps Streamlit's tab icon** (2026-11-10). Streamlit's
+page arrives with its own icon and only switches to the app's `page_icon`
+once the app has run, so a slow start or Safari showed Streamlit's logo.
+Render's build command therefore runs `app/install_tab_icon.py`, which
+copies the Dredgers' icon over Streamlit's file in the installed package.
+Editing an installed library is normally avoided, since an upgrade can
+quietly undo it; here every build reruns it, the script fails the build if
+the file moves, and `tests/test_tab_icon.py` checks the same. The worst
+case is the old behaviour.
+
 **What's in it** (reworked 2026-11-10 after the team's first review).
 Each page is framed as a question and explains its charts in plain
 language: *Is the canal safe to swim in?* (Enterococcus by year with each
@@ -695,6 +705,9 @@ So nobody re-investigates these. In the shared drive's
   project with the OAuth client for sign-in, and the Render service (its
   GitHub App installed on this repo only). The workflow file itself was
   added through the GitHub website.
+- Changed 2026-11-10 in Render: the build command also runs
+  `python app/install_tab_icon.py` (see "Streamlit app"). Render doesn't
+  rebuild when a setting changes, so it took a manual deploy to apply.
 - The GitHub login AI agents use on the owner's Mac is a fine-grained
   token limited to this repo: it can push code and open and merge pull
   requests, but cannot change workflows, secrets or settings, or start
