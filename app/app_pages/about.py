@@ -18,8 +18,9 @@ st.title('Gowanus Dredgers Data Dashboard')
 st.markdown("""
 The Gowanus Canal is a federal Superfund site whose water quality changes
 hour to hour: tides, rain-triggered sewage overflows, wind, and temperature
-all move it. This data dashboard, built by the Gowanus Dredgers Canoe Club
-in partnership with Urban Data Response, provides a historical lens on the
+all move it. This data dashboard, built by the
+[Gowanus Dredgers Canoe Club](https://gowanusdredgers.org) in partnership
+with [Urban Data Response](https://www.urbandataresponse.org), provides a historical lens on the
 health of the canal over time.
 """)
 
