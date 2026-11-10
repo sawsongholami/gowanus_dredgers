@@ -41,9 +41,11 @@ st.markdown('''<style>
 [data-testid="stSidebarLogo"] { height: 6rem; }
 /* Sidebar menu: tight list of page links; the open page and its section
    links share one highlighted box. */
-.st-key-menu { gap: 0.125rem; }
+.st-key-menu { gap: 0.5rem; }
+/* Streamlit pulls page links together with -6px margins; undo that so the gap above applies. */
+.st-key-menu [data-testid="stElementContainer"] { margin-top: 0; margin-bottom: 0; }
 .st-key-menu_current {
-    gap: 0; padding-bottom: 0.5rem; border-radius: 0.5rem;
+    gap: 0.25rem; margin: 0.375rem 0; padding: 0.25rem 0 0.75rem; border-radius: 0.5rem;
     background-color: rgba(151, 166, 195, 0.25);
 }
 .st-key-menu_current [data-testid="stPageLink-NavLink"] { background: transparent; }
