@@ -6,6 +6,7 @@ import streamlit as st
 import access
 import charts
 import data
+import sections
 import site_map
 
 access.require('turbidity')
@@ -22,7 +23,7 @@ canal, Butler St to 3rd St (dredged 2020 to 2024). **RTA2** is the middle,
 3rd St to Hamilton Ave (under way since 2024).
 """)
 
-st.subheader('How cloudy was the water, week by week?')
+sections.heading('How cloudy was the water, week by week?')
 st.markdown('**Weekly turbidity through the two dredging phases.** Each point is one week. '
             'Switch to the 90th percentile to see the spikes: the cloudiest tenth of each week.')
 
