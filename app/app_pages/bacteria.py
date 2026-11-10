@@ -34,9 +34,11 @@ c3.metric('Geometric mean', f'{data.geo_mean(df.mpn):,.0f} MPN',
 c4.metric('Years', f'{df.year.min()}–{df.year.max()}')
 
 log_y = alt.Y('mpn:Q', scale=alt.Scale(type='log'), title='Enterococcus (MPN/100 mL, log scale)')
-GEO_MEAN_NOTE = ('The **geometric mean** is the standard summary for bacteria counts. One storm sample '
-                 'can be a thousand times a dry-day one, and an ordinary average would be set by that '
-                 'one sample; the geometric mean averages the *scale* of the counts instead. Results '
+GEO_MEAN_NOTE = ('The **geometric mean** is the standard summary for bacteria counts. A sample taken '
+                 'after a storm can hold a thousand times more bacteria than one taken on a dry day, '
+                 'so an ordinary average would be set almost entirely by that one sample. The '
+                 'geometric mean averages the counts by their order of magnitude (10, 100, 1,000) '
+                 'instead, so no single sample swamps the rest. Results '
                  'the lab reported as "<10" count as 10, and ">24,196" as 24,196.')
 
 # --- Every sample, by year --------------------------------------------------

@@ -47,11 +47,16 @@ st.markdown('''<style>
     background-color: rgba(151, 166, 195, 0.25);
 }
 .st-key-menu_current [data-testid="stPageLink-NavLink"] { background: transparent; }
-.st-key-menu_current [data-testid="stMarkdownContainer"] {
-    padding-left: 1.25rem; font-size: 0.875rem; line-height: 1.9;
+.st-key-menu_current [data-testid="stPageLink-NavLink"] p { font-weight: 600; }
+/* The section list (stMarkdown, not the page link's own label): bulleted,
+   indented past the page name, a size smaller. */
+.st-key-menu_current [data-testid="stMarkdown"] ul { margin: 0; padding-left: 2rem; }
+.st-key-menu_current [data-testid="stMarkdown"] li {
+    margin: 0 0.5rem 0.35rem 0; padding: 0; font-size: 0.8rem; line-height: 1.35;
 }
-.st-key-menu_current [data-testid="stMarkdownContainer"] a { color: inherit; text-decoration: none; }
-.st-key-menu_current [data-testid="stMarkdownContainer"] a:hover { text-decoration: underline; }
+.st-key-menu_current [data-testid="stMarkdown"] li::marker { color: rgba(151, 166, 195, 0.9); }
+.st-key-menu_current [data-testid="stMarkdown"] a { color: inherit; text-decoration: none; }
+.st-key-menu_current [data-testid="stMarkdown"] a:hover { text-decoration: underline; }
 </style>''', unsafe_allow_html=True)
 
 PAGES = {
@@ -107,9 +112,9 @@ def draw_menu():
                 continue
             with st.container(key='menu_current'):
                 st.page_link(page)
-                links = [f'[{title}](#{sections.slug(title)})' for title in sections.collected()]
+                links = [f'- [{title}](#{sections.slug(title)})' for title in sections.collected()]
                 if links:
-                    st.markdown('  \n'.join(links))
+                    st.markdown('\n'.join(links))
 
 
 sections.reset()
