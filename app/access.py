@@ -31,6 +31,7 @@ PAGE_ACCESS = {
     'bacteria': 'team',
     'oxygen': 'team',
     'turbidity': 'team',
+    'explore': 'team',
     'viewers': 'admin',
 }
 

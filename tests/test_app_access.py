@@ -24,8 +24,8 @@ import access  # noqa: E402
 import data  # noqa: E402
 
 ENTRY = str(APP_DIR / 'streamlit_app.py')
-LOADERS = ('enterococcus', 'oxygen_by_site', 'turbidity_weekly', 'viewers')
-PRIVATE_PAGES = ('bacteria', 'oxygen', 'turbidity', 'viewers')
+LOADERS = ('enterococcus', 'oxygen_by_site', 'turbidity_weekly', 'daily_measures', 'viewers')
+PRIVATE_PAGES = ('bacteria', 'oxygen', 'turbidity', 'explore', 'viewers')
 
 
 def _fake_frames():
@@ -34,7 +34,12 @@ def _fake_frames():
         'enterococcus': pd.DataFrame({
             'date': dates, 'site': ['Second St', 'Lowlands', 'Second St'],
             'mpn': [10.0, 2400.0, 85.0], 'rain_72h_in': [0.0, 0.8, 0.05],
-            'year': dates.year, 'over_threshold': [False, True, False]}),
+            'year': dates.year, 'over_threshold': [False, True, False],
+            'hours_from_high_tide': [-5.0, 0.5, 4.5]}),
+        'daily_measures': pd.DataFrame({
+            'date': list(dates) * 2,
+            'measure': ['Enterococcus (MPN/100 mL)'] * 3 + ['Rain (mm per day)'] * 3,
+            'value': [10.0, 2400.0, 85.0, 0.0, 20.3, 1.2]}),
         'oxygen_by_site': pd.DataFrame({
             'site': ['Second St'], 'rta_zone': ['RTA1'], 'n': [500], 'mean_do': [4.2],
             'p10_do': [2.1], 'pct_below': [60.0],
@@ -118,7 +123,7 @@ def test_public_viewers_see_only_about_and_trigger_no_queries(viewer, email, rol
     calls = viewer(email, role, data_allowed=False)
     at = _run()
     assert not at.exception
-    assert _titles(at) == ['Gowanus Canal water data']
+    assert _titles(at) == ['Gowanus Dredgers Data Dashboard']
     for page in PRIVATE_PAGES:
         assert _run(page) is None, f'{page} was reachable'
     assert _titles(_run('privacy')) == ['Privacy']
@@ -127,8 +132,10 @@ def test_public_viewers_see_only_about_and_trigger_no_queries(viewer, email, rol
 
 def test_team_sees_charts_but_not_the_viewer_list(viewer):
     calls = viewer('team@example.com', 'team', data_allowed=True)
-    for page, title in [('bacteria', 'Bacteria (Enterococcus)'),
-                        ('oxygen', 'Dissolved oxygen'), ('turbidity', 'Turbidity')]:
+    for page, title in [('bacteria', 'Is the canal safe to swim in?'),
+                        ('oxygen', 'Can fish survive in the canal?'),
+                        ('turbidity', 'How much does dredging cloud the water?'),
+                        ('explore', 'Explore the data')]:
         at = _run(page)
         assert not at.exception, at.exception
         assert _titles(at) == [title]
@@ -141,3 +148,11 @@ def test_admin_sees_the_viewer_list(viewer):
     at = _run('viewers')
     assert not at.exception, at.exception
     assert _titles(at) == ['Who can see this']
+
+
+def test_geometric_mean_and_one_year_view(viewer):
+    assert data.geo_mean([10, 1000]) == pytest.approx(100)
+    viewer('team@example.com', 'team', data_allowed=True)
+    at = _run('bacteria')
+    at.selectbox[0].select('2024').run()
+    assert not at.exception, at.exception

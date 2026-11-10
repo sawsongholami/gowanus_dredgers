@@ -22,7 +22,7 @@ GRANT USAGE ON SCHEMA public TO app_reader;
 -- through duro_filtered instead) and observations (volunteer submissions).
 GRANT SELECT ON cwqt, turbidity_rta1, turbidity_rta2, turbidity,
                 duro_filtered, site_zones, daily_site_summary,
-                daily_weather, rain_windows
+                daily_weather, rain_windows, tide_predictions
              TO app_reader;
 
 -- Supabase turns on row-level security for tables, and with it on a
@@ -35,6 +35,10 @@ DROP POLICY IF EXISTS app_reader_reads ON turbidity_rta1;
 CREATE POLICY app_reader_reads ON turbidity_rta1 FOR SELECT TO app_reader USING (true);
 DROP POLICY IF EXISTS app_reader_reads ON turbidity_rta2;
 CREATE POLICY app_reader_reads ON turbidity_rta2 FOR SELECT TO app_reader USING (true);
+
+-- Tide predictions are NOAA's public data; the data explorer charts them.
+DROP POLICY IF EXISTS app_reader_reads ON tide_predictions;
+CREATE POLICY app_reader_reads ON tide_predictions FOR SELECT TO app_reader USING (true);
 
 GRANT SELECT ON app_viewers TO app_reader;
 DROP POLICY IF EXISTS app_reader_reads_viewers ON app_viewers;

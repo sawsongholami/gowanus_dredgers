@@ -93,6 +93,7 @@ forms/create_observation_form.gs
 app/                  the Streamlit app (see "Streamlit app" below)
   streamlit_app.py    entry point: who is viewing, which pages they get
   access.py           the access rules: which page needs which level
+  site_map.py         the canal map that opens under each chart
   data.py             read-only queries and summaries
   app_pages/          one file per page
 db/app_reader.sql     one-time setup of the app's read-only login
@@ -419,6 +420,19 @@ connects through a GitHub App that can be installed on this one repo
 only. The trade-off: Render's free tier sleeps after about 15 idle
 minutes, so the first visit after a quiet spell takes ~30 seconds.
 
+**What's in it** (reworked 2026-11-10 after the team's first review).
+Each page is framed as a question and explains its charts in plain
+language: *Is the canal safe to swim in?* (Enterococcus by year with each
+year's geometric mean, a one-year view, rain, tide at sampling time, and
+sites), *Can fish survive in the canal?* (dissolved oxygen),
+*How much does dredging cloud the water?* (turbidity), and *Explore the
+data*, which puts any of the datasets side by side as one number per day.
+Bacteria are summarised with the geometric mean, the convention for
+Enterococcus, not the median. A map of the monitoring sites opens under
+each chart with that chart's sites picked out (`app/site_map.py`; the
+street map behind it is loaded from CARTO by the viewer's browser, which
+the Privacy page says).
+
 **Who sees what.** Visitors sign in with Google. The `app_viewers` table
 lists who may see the private pages (`team`) and who may also see the
 viewer list (`admin`); everyone else, signed in or not, gets only the
@@ -594,8 +608,25 @@ Empty tables and what fills them:
     live on Render since 2026-11-03 for the four-person team (all admin;
     Google test users plus the viewer list). Publishing either one waits
     on the project lead's OK for the Duro and CWQT data. Still open:
-    refreshing the static page's data automatically once `main.py` runs
-    on a schedule (item 10).
+    - refreshing the static page's data automatically once `main.py` runs
+      on a schedule (item 10);
+    - **let the app read tides:** re-run the grants in `db/app_reader.sql`
+      (everything below the `CREATE ROLE` line) in the Supabase SQL editor.
+      Until then the explorer leaves the tide dataset out;
+    - the About page now carries the partners' draft website copy (the
+      "Dashboard / Website Copy" tab of the SOW doc). Its figures (CSO
+      gallons, apartment counts, tank sizes and dates, the August 2024
+      flushing-tunnel jump) are theirs and unchecked against a source;
+      confirm before the page goes public. The draft's bacteria guidance
+      (35 / 104 MPN) differs from the app's 110 line: see the last point;
+    - put the two CWQT sites with no coordinates (Lowlands, Dentons Pond)
+      and the turbidity buoys on the map (needs their locations);
+    - move site coordinates into the database (a `sites` view in
+      `schema.sql`) so the app's copy in `site_map.py` and the loader's
+      `SITE_BOXES` can't drift apart;
+    - check the swim threshold with the project lead: the app uses 110 MPN
+      and calls it EPA's Beach Action Value, and shows no geometric-mean
+      standard line.
 12. **RTA2 gaps (optional).** 17 of the 113 RTA2 report PDFs yielded no
     rows: weeks 1–8 (Jun–Aug 2024) use an earlier table layout with a
     `9SB` station and merged cells that defeat extraction (recoverable

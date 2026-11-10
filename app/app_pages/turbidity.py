@@ -6,14 +6,25 @@ import streamlit as st
 import access
 import charts
 import data
+import site_map
 
 access.require('turbidity')
 
-st.title('Turbidity')
+st.title('How much does dredging cloud the water?')
 st.markdown("""
-Turbidity is how cloudy the water is, measured in NTU. Dredging stirs up
-sediment, so the Superfund cleanup monitors it every 15 minutes.
+The Superfund cleanup is digging a century of polluted mud off the canal
+floor. Digging stirs that mud into the water, so the cleanup team measures
+**turbidity**, how cloudy the water is, every 15 minutes. The unit is NTU;
+clear drinking water is under 1.
+
+The cleanup works down the canal in stretches. **RTA1** is the top of the
+canal, Butler St to 3rd St (dredged 2020 to 2024). **RTA2** is the middle,
+3rd St to Hamilton Ave (under way since 2024).
 """)
+
+st.subheader('How cloudy was the water, week by week?')
+st.markdown('**Weekly turbidity through the two dredging phases.** Each point is one week. '
+            'Switch to the 90th percentile to see the spikes: the cloudiest tenth of each week.')
 
 df = data.turbidity_weekly()
 stat = st.segmented_control(
@@ -33,6 +44,10 @@ lines = alt.Chart(df).mark_line(strokeWidth=2).encode(
              alt.Tooltip('n:Q', title='readings', format=',')],
 )
 st.altair_chart(lines, width='stretch')
+site_map.show({'RTA1 stretch': site_map.ZONES['RTA1'], 'RTA2 stretch': site_map.ZONES['RTA2']},
+              label='Map: the two stretches of canal',
+              note='The dots are monitoring sites inside each stretch, to show where the stretch '
+                   "is. The turbidity buoys' own positions aren't on file.")
 
 st.caption('RTA1 and RTA2 are different stretches of the canal, monitored one after the other with '
            'different buoys, so they are kept as two lines. Only the "ambient" station, which both '

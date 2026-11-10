@@ -22,6 +22,10 @@ and a short note for each person the project team has given access. It is
 kept in the project's database and used only to decide what each viewer
 can see. To be removed from it, ask the project team.
 
+**Maps.** The street map behind each map on this site is loaded by your
+browser from CARTO, a map provider, which sees the request the way any
+website you visit does. We don't send it anything about you.
+
 **What we don't do.** We don't sell, share or analyse your information,
 send email, or use it for anything other than access to this site.
 
