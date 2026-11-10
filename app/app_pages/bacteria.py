@@ -7,6 +7,7 @@ import streamlit as st
 import access
 import charts
 import data
+import sections
 import site_map
 
 access.require('bacteria')
@@ -41,7 +42,7 @@ GEO_MEAN_NOTE = ('The **geometric mean** is the standard summary for bacteria co
 # --- Every sample, by year --------------------------------------------------
 # Each dot is one sample, so a year's spread and its sample count are both
 # visible -- a share-over-threshold bar hides how few samples some years had.
-st.subheader('Has the water been getting cleaner?')
+sections.heading('Has the water been getting cleaner?')
 st.markdown('**Every sample, by year.** Each dot is one sample; the orange bar is that '
             "year's geometric mean. If the canal were getting cleaner, the bars would step down.")
 
@@ -104,7 +105,7 @@ site_map.show({'Sampled for bacteria' + ('' if picked == 'All years' else f' in 
                sorted(shown.site.unique())})
 
 # --- Rain before sampling ---------------------------------------------------
-st.subheader('What does rain do?')
+sections.heading('What does rain do?')
 st.markdown('**Rain in the 72 hours before sampling.** Each dot is one sample: further right '
             'means more rain in the three days before it was taken. Dots climbing to the right '
             'are sewer overflows reaching the canal.')
@@ -134,7 +135,7 @@ if len(dry) and len(wet):
                f'(geometric mean {data.geo_mean(wet.mpn):,.0f} MPN).')
 
 # --- Tide at sampling time ----------------------------------------------------
-st.subheader('Does the tide matter?')
+sections.heading('Does the tide matter?')
 st.markdown('**Where the tide was when each sample was taken.** The canal is tidal: harbor water '
             'pushes in as the tide rises and drains out as it falls. The middle of the chart is '
             'high tide; the two edges are low tide.')
@@ -161,7 +162,7 @@ if len(near_high) and len(near_low):
                "canal's. This doesn't separate tide from rain, so read it as a first look.")
 
 # --- By site ------------------------------------------------------------------
-st.subheader('Where is it worst?')
+sections.heading('Where is it worst?')
 st.markdown('**By site.** The same samples, grouped by where they were taken.')
 by_site = df.groupby('site').agg(
     samples=('mpn', 'size'),

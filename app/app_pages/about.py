@@ -9,6 +9,7 @@ went out, what updates), the data won.
 import streamlit as st
 
 import access
+import sections
 import site_map
 
 access.require('about')
@@ -26,7 +27,7 @@ if st.session_state.get('viewer_level', 'public') == 'public':
     st.info('The charts are shared with the project team for now. '
             'Sign in with Google from the sidebar if you have access.')
 
-st.header('How to use this dashboard')
+sections.heading('How to use this dashboard', level='header')
 st.markdown("""
 This dashboard is historical, not real-time. It brings together bacteria
 results, water quality readings, turbidity monitoring, weather and tides, so
@@ -50,7 +51,7 @@ it's commonly used as a sign of poop in the water!
 [Learn more at epa.gov »](https://www.epa.gov/national-aquatic-resource-surveys/indicators-enterococci)
 """)
 
-st.header('History of the Gowanus Canal')
+sections.heading('History of the Gowanus Canal', level='header')
 st.markdown("""
 The Gowanus Dredgers Canoe Club formed in 1999, when the canal was in rough
 shape: industrial pollution, illegal dumping, and raw sewage from combined
@@ -72,7 +73,7 @@ conditions are improving, holding steady, or facing new risks as more people
 move in before the infrastructure catches up.
 """)
 
-st.header('Why is this important')
+sections.heading('Why is this important', level='header')
 st.markdown("""
 Gowanus is served by a combined sewer system, which carries stormwater and
 sewage in the same pipes. During heavy rain, the system overflows directly
@@ -132,7 +133,7 @@ once the tanks are running, so the neighborhood, not just DEP, can see
 whether the investment worked.
 """)
 
-st.header('What does the data mean')
+sections.heading('What does the data mean', level='header')
 st.markdown("""
 **Water quality (Duro Field Sonde).** Volunteers carried a handheld sensor
 to sites along the canal and logged readings at each stop. The dashboard
@@ -159,7 +160,7 @@ effect: a rain event, a drop in salinity, a spike in Enterococcus, and a dip
 in dissolved oxygen that can take hours or days to recover.
 """)
 
-st.header('How this data was collected')
+sections.heading('How this data was collected', level='header')
 st.markdown("""
 Water quality readings came from a Duro UAS Field Sonde, carried along the
 canal by the club's captain on 210 outings between August 2023 and October
@@ -186,7 +187,7 @@ weather is from Open-Meteo, a weather model; tides are NOAA's predictions
 for Gowanus Bay.
 """)
 
-st.header('About the Gowanus Dredgers')
+sections.heading('About the Gowanus Dredgers', level='header')
 st.markdown("""
 The Gowanus Dredgers Canoe Club is an all-volunteer nonprofit that has
 worked since 1999 to open up the Gowanus waterfront through recreation,

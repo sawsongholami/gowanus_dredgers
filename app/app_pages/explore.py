@@ -7,6 +7,7 @@ import streamlit as st
 import access
 import charts
 import data
+import sections
 import site_map
 
 access.require('explore')
@@ -37,7 +38,7 @@ else:
     start = end = first_year
 
 # --- Side by side over time ---------------------------------------------------
-st.subheader('Side by side over time')
+sections.heading('Side by side over time')
 st.caption('Drag a chart sideways to pan; the charts move together. Narrow the Years slider to zoom in. '
            'Gaps are days with no measurement, not zeros.')
 
@@ -77,7 +78,7 @@ st.dataframe(coverage, hide_index=True, column_config={
 
 # --- Against each other ---------------------------------------------------------
 if len(picked) >= 2:
-    st.subheader('Against each other')
+    sections.heading('Against each other')
     st.markdown('Each dot is one day when **both** datasets have a value. A pattern here is a '
                 'hint worth checking, not proof that one causes the other.')
     c1, c2 = st.columns(2)

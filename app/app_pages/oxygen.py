@@ -6,6 +6,7 @@ import streamlit as st
 import access
 import charts
 import data
+import sections
 import site_map
 
 access.require('oxygen')
@@ -21,7 +22,7 @@ The Dredgers measured dissolved oxygen from a canoe, with a sensor called a
 sonde, on about 200 outings between August 2023 and October 2024.
 """)
 
-st.subheader('Which parts of the canal have enough oxygen?')
+sections.heading('Which parts of the canal have enough oxygen?')
 st.markdown('**Average dissolved oxygen by site.** One bar per site, lowest at the top. '
             'A bar that stops short of the dashed line averages below the standard.')
 
@@ -47,7 +48,7 @@ st.caption('The dashed line is the 5 mg/L standard. Sites with fewer than 100 re
 
 site_map.show({'Dissolved oxygen measured here': list(df.site)})
 
-st.subheader('How bad does it get on a bad day?')
+sections.heading('How bad does it get on a bad day?')
 st.markdown('**The numbers behind the bars.** The average hides the bad days, and the bad days '
             'are what kill fish. The 10th percentile is the level on a bad day: one reading in '
             'ten was lower than this. The last number is how much of the time each site was '
