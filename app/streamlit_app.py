@@ -33,6 +33,7 @@ PAGES = {
     'bacteria': st.Page('app_pages/bacteria.py', title='Bacteria'),
     'oxygen': st.Page('app_pages/oxygen.py', title='Dissolved oxygen'),
     'turbidity': st.Page('app_pages/turbidity.py', title='Turbidity'),
+    'explore': st.Page('app_pages/explore.py', title='Explore the data'),
     'viewers': st.Page('app_pages/viewers.py', title='Who can see this'),
     # Fixed URL (/privacy): it is the privacy policy link on Google's sign-in screen.
     'privacy': st.Page('app_pages/privacy.py', title='Privacy', url_path='privacy'),

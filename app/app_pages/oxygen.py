@@ -6,15 +6,24 @@ import streamlit as st
 import access
 import charts
 import data
+import site_map
 
 access.require('oxygen')
 
-st.title('Dissolved oxygen')
+st.title('Can fish survive in the canal?')
 st.markdown(f"""
-Fish need oxygen dissolved in the water. New York State's standard for this
-class of water is **{data.DO_STANDARD_MG_L:g} mg/L**; below it, fish and other
-animals start to struggle.
+Fish breathe oxygen dissolved in the water. When sewage and algae rot, they
+use that oxygen up, and fish and crabs have to leave or die. New York
+State's standard for this class of water is **{data.DO_STANDARD_MG_L:g} mg/L**;
+below it, fish and other animals start to struggle.
+
+The Dredgers measured dissolved oxygen from a canoe, with a sensor called a
+sonde, on about 200 outings between August 2023 and October 2024.
 """)
+
+st.subheader('Which parts of the canal have enough oxygen?')
+st.markdown('**Average dissolved oxygen by site.** One bar per site, lowest at the top. '
+            'A bar that stops short of the dashed line averages below the standard.')
 
 df = data.oxygen_by_site()
 
@@ -36,6 +45,13 @@ st.caption('The dashed line is the 5 mg/L standard. Sites with fewer than 100 re
            'Every reading is from a daytime outing of about 40 minutes, so the overnight low, '
            "when oxygen is usually lowest, hasn't been measured.")
 
+site_map.show({'Dissolved oxygen measured here': list(df.site)})
+
+st.subheader('How bad does it get on a bad day?')
+st.markdown('**The numbers behind the bars.** The average hides the bad days, and the bad days '
+            'are what kill fish. The 10th percentile is the level on a bad day: one reading in '
+            'ten was lower than this. The last number is how much of the time each site was '
+            'below the standard.')
 st.dataframe(
     df, hide_index=True,
     column_config={
