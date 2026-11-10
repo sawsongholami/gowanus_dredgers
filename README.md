@@ -520,7 +520,10 @@ for rebuilding it elsewhere):
    select repositories > this repo**. Then:
    - Name `gowanus-dredgers`, branch `main`, region Ohio (next to
      Supabase), language Python 3, instance type Free.
-   - Build command: `pip install -r app/requirements.txt`
+   - Build command: `pip install -r app/requirements.txt && python
+     app/install_tab_icon.py` (the second part puts the Dredgers' icon
+     in place of Streamlit's own, so the browser tab shows it from the
+     first moment, not only once the app has loaded)
    - Start command: `streamlit run app/streamlit_app.py --server.port
      $PORT --server.address 0.0.0.0 --server.headless true
      --secrets.files /etc/secrets/secrets.toml`
