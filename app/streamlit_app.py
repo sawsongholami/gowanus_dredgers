@@ -11,13 +11,20 @@ Streamlit auto-registers a folder by that name, which would bypass the
 access check.)
 """
 
+import pathlib as pl
+
 import streamlit as st
 
 import access
 import data
 
-st.set_page_config(page_title='Gowanus Dredgers water data', layout='wide',
-                   initial_sidebar_state='expanded')
+# The Dredgers' logo, from gowanusdredgers.org. Used as the browser-tab icon
+# and in the top-left corner (linking back to the Dredgers' site).
+LOGO = pl.Path(__file__).parent / 'assets' / 'dredgers_logo.svg'
+
+st.set_page_config(page_title='Gowanus Dredgers water data', page_icon=str(LOGO),
+                   layout='wide', initial_sidebar_state='expanded')
+st.logo(str(LOGO), size='large', link='https://gowanusdredgers.org')
 
 # Keep the sidebar (the page list) open: hide its collapse button on screens
 # wide enough to show it beside the page. Phones keep the button, since there

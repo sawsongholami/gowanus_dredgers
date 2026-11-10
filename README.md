@@ -94,6 +94,7 @@ app/                  the Streamlit app (see "Streamlit app" below)
   streamlit_app.py    entry point: who is viewing, which pages they get
   access.py           the access rules: which page needs which level
   site_map.py         the canal map that opens under each chart
+  assets/             the Dredgers' logo (tab icon and top-left corner)
   data.py             read-only queries and summaries
   app_pages/          one file per page
 db/app_reader.sql     one-time setup of the app's read-only login
