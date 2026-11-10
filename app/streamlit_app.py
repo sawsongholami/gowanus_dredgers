@@ -1,5 +1,5 @@
 """
-Gowanus Dredgers water data: the Streamlit app's entry point.
+Gowanus Dredgers Data Dashboard: the Streamlit app's entry point.
 
 Run from the repo root:
 
@@ -26,7 +26,7 @@ ASSETS = pl.Path(__file__).parent / 'assets'
 LOGO = ASSETS / 'dredgers_logo.svg'
 TAB_ICON = ASSETS / 'dredgers_icon.png'
 
-st.set_page_config(page_title='Gowanus Dredgers water data', page_icon=str(TAB_ICON),
+st.set_page_config(page_title='Gowanus Dredgers Data Dashboard', page_icon=str(TAB_ICON),
                    layout='wide', initial_sidebar_state='expanded')
 st.logo(str(LOGO), size='large', link='https://gowanusdredgers.org')
 
