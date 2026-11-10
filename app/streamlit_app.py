@@ -19,11 +19,14 @@ import access
 import data
 import sections
 
-# The Dredgers' logo, from gowanusdredgers.org. Used as the browser-tab icon
-# and in the top-left corner (linking back to the Dredgers' site).
-LOGO = pl.Path(__file__).parent / 'assets' / 'dredgers_logo.svg'
+# The Dredgers' logo, from gowanusdredgers.org, in the top-left corner
+# (linking back to the Dredgers' site). The browser-tab icon is a square PNG
+# copy on white, since Safari doesn't show SVG tab icons.
+ASSETS = pl.Path(__file__).parent / 'assets'
+LOGO = ASSETS / 'dredgers_logo.svg'
+TAB_ICON = ASSETS / 'dredgers_icon.png'
 
-st.set_page_config(page_title='Gowanus Dredgers water data', page_icon=str(LOGO),
+st.set_page_config(page_title='Gowanus Dredgers water data', page_icon=str(TAB_ICON),
                    layout='wide', initial_sidebar_state='expanded')
 st.logo(str(LOGO), size='large', link='https://gowanusdredgers.org')
 
@@ -34,11 +37,23 @@ st.markdown('''<style>
 @media (min-width: 768px) {
     [data-testid="stSidebarCollapseButton"] { display: none; }
 }
-/* Bigger corner logo than st.logo allows (it stops at 32px). If a Streamlit
-   update renames these, the logo just falls back to its small size. */
+/* Bigger corner logo than st.logo allows (it stops at 32px), with the
+   dashboard's title beside it (st.logo takes only an image, so the title is
+   added here). If a Streamlit update renames these, the logo just falls back
+   to its small size without the title. Scoped to the sidebar so the small
+   logo shown when the sidebar is collapsed stays bare. */
 [data-testid="stSidebarHeader"] { height: auto; padding-bottom: 0.5rem; }
-[data-testid="stLogoLink"] { height: auto; }
-[data-testid="stSidebarLogo"] { height: 6rem; }
+[data-testid="stSidebarHeader"] [data-testid="stLogoLink"] {
+    height: auto; display: flex; align-items: center; gap: 0.75rem;
+    color: inherit; text-decoration: none;
+}
+[data-testid="stSidebarLogo"] { height: 4.5rem; }
+[data-testid="stSidebarHeader"] [data-testid="stLogoLink"]::after {
+    content: "Gowanus Dredgers Data Dashboard";
+    font-weight: 700; font-size: 1.15rem; line-height: 1.25;
+}
+/* "Built by" partner links at the bottom of the sidebar. */
+.st-key-partners { margin-top: 1rem; }
 /* Sidebar menu: tight list of page links; the open page and its section
    links share one highlighted box. */
 .st-key-menu { gap: 0.5rem; }
@@ -100,6 +115,9 @@ with st.sidebar:
         st.button('Sign out', on_click=st.logout)
     else:
         st.button('Sign in with Google', on_click=st.login, type='primary')
+    with st.container(key='partners'):
+        st.caption('Built by the [Gowanus Dredgers](https://gowanusdredgers.org) and '
+                   '[Urban Data Response](https://www.urbandataresponse.org).')
 
 
 def draw_menu():
