@@ -12,7 +12,7 @@ locally, the secrets.toml Secret File on Render).
 
 Aggregation follows the same rules as the static dashboard's build_data.py
 so the two agree: weekly turbidity medians over full weeks only, DO sites
-with at least 100 readings, the EPA swim threshold for Enterococcus.
+with at least 100 readings, the New York State swim standards for Enterococcus.
 """
 
 import numpy as np
@@ -20,10 +20,10 @@ import pandas as pd
 import sqlalchemy as sa
 import streamlit as st
 
-# EPA Beach Action Value for Enterococcus, single sample: 110 MPN/100 mL.
-SWIM_THRESHOLD_MPN = 110
-# NY State chronic standard for dissolved oxygen in Class SD waters: 5 mg/L.
-DO_STANDARD_MG_L = 5.0
+# Water quality standards live in standards.py, shared with the static page.
+from standards import (  # noqa: E402
+    DO_STANDARD_MG_L, GEO_MEAN_MIN_SAMPLES, GEO_MEAN_STANDARD_MPN, GEO_MEAN_WINDOW_DAYS, SWIM_THRESHOLD_MPN,
+)
 
 # Average time from one high tide to the next, in hours.
 TIDE_CYCLE_H = 12.42
@@ -93,6 +93,46 @@ def geo_mean(values):
     as 10), the same way they are stored."""
     values = pd.Series(values).dropna()
     return float(np.exp(np.log(values).mean())) if len(values) else float('nan')
+
+
+def rating(geo_mean):
+    """CWQT's rating for a geometric mean: good (35 or less), advisory (up to
+    104), poor (over 104). Their charts apply it to a site's season of
+    samples, not to single samples."""
+    if pd.isna(geo_mean):
+        return None
+    if geo_mean <= GEO_MEAN_STANDARD_MPN:
+        return 'good'
+    return 'advisory' if geo_mean <= SWIM_THRESHOLD_MPN else 'poor'
+
+
+def rolling_geo_mean(df):
+    """The state's 30-day test, per site: for each day a site was sampled, the
+    geometric mean of that site's samples in the 30 days ending that day.
+
+    One row per site and sampling day, with n (samples in the window) and
+    geo_mean. Only windows with at least GEO_MEAN_MIN_SAMPLES samples count
+    toward the standard (qualifies); weekly sampling gives five when no week
+    is missed. Windows overlap, since each sampling day ends one.
+    """
+    rows = df.dropna(subset=['mpn']).sort_values('date')
+    out = []
+    for site, g in rows.groupby('site'):
+        logs = np.log(g.set_index('date')['mpn'])
+        win = logs.rolling(f'{GEO_MEAN_WINDOW_DAYS}D')
+        r = pd.DataFrame({'n': win.count(), 'log_mean': win.mean()})
+        r = r[~r.index.duplicated(keep='last')].reset_index()   # several samples on one day: one window
+        r['site'] = site
+        out.append(r)
+    cols = ['site', 'date', 'year', 'n', 'geo_mean', 'qualifies', 'rating']
+    if not out:
+        return pd.DataFrame(columns=cols)
+    r = pd.concat(out, ignore_index=True)
+    r['geo_mean'] = np.exp(r.pop('log_mean'))
+    r['year'] = r['date'].dt.year
+    r['qualifies'] = r['n'] >= GEO_MEAN_MIN_SAMPLES
+    r['rating'] = r['geo_mean'].where(r['qualifies']).map(rating)
+    return r[cols]
 
 
 def _hours(times):

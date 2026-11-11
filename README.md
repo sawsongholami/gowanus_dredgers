@@ -440,7 +440,20 @@ sites), *Can fish survive in the canal?* (dissolved oxygen),
 *How much does dredging cloud the water?* (turbidity), and *Explore the
 data*, which puts any of the datasets side by side as one number per day.
 Bacteria are summarised with the geometric mean, the convention for
-Enterococcus, not the median. A map of the monitoring sites opens under
+Enterococcus, not the median.
+**Swim standards** (decided 2026-11-11 with the project lead): New York
+State's bathing-beach rules (10 NYCRR Subpart 6-2, also NYC's): no single
+sample over 104 MPN, and a 30-day geometric mean of five or more samples
+no higher than 35. Single samples are judged against 104 only;
+geometric means get CWQT's rating, good (35 or less), advisory (up to
+104) or poor (over 104), as on their charts page. This replaced an
+earlier 110 MPN line labelled as EPA's Beach Action Value. The page's
+"Did it pass the state's 30-day test?" section applies 35 the way the state
+does: for each site and sampling day, the geometric mean of that site's
+samples over the 30 days ending that day, counted only when the window
+holds five or more samples (`data.rolling_geo_mean`). All the standards
+(and the 5 mg/L oxygen line) live once, in `app/standards.py`, which the
+static page's `build_data.py` imports too. A map of the monitoring sites opens under
 each chart with that chart's sites picked out (`app/site_map.py`; the
 street map behind it is loaded from CARTO by the viewer's browser, which
 the Privacy page says).
@@ -622,7 +635,9 @@ Empty tables and what fills them:
     Streamlit app in `app/` is the team dashboard, with Google sign-in,
     live on Render since 2026-11-03 for the four-person team (all admin;
     Google test users plus the viewer list). Publishing either one waits
-    on the project lead's OK for the Duro and CWQT data. Still open:
+    on the project lead's OK for the Duro and CWQT data, and the club
+    wants to read the chart pages through before they go public (project
+    lead, 2026-11-11). Still open:
     - refreshing the static page's data automatically once `main.py` runs
       on a schedule (item 10);
     - **let the app read tides:** re-run the grants in `db/app_reader.sql`
@@ -632,16 +647,17 @@ Empty tables and what fills them:
       "Dashboard / Website Copy" tab of the SOW doc). Its figures (CSO
       gallons, apartment counts, tank sizes and dates, the August 2024
       flushing-tunnel jump) are theirs and unchecked against a source;
-      confirm before the page goes public. The draft's bacteria guidance
-      (35 / 104 MPN) differs from the app's 110 line: see the last point;
-    - put the two CWQT sites with no coordinates (Lowlands, Dentons Pond)
-      and the turbidity buoys on the map (needs their locations);
+      confirm before the page goes public (asked Arpan, 2026-11-11);
+    - put Dentons Pond on the map: its outfall sampling site is somewhere
+      near Whole Foods; the project lead is asking Eymund for the spot.
+      (Lowlands is placed, from the lead's pin. The two ambient turbidity
+      buoys are placed approximately, from the weekly reports' "Buoy
+      Locations" text: RTA1's in the eastern end of the Fourth St Turning
+      Basin, RTA2's just north of Carroll St Bridge; see `BUOYS` in
+      `site_map.py`.);
     - move site coordinates into the database (a `sites` view in
       `schema.sql`) so the app's copy in `site_map.py` and the loader's
       `SITE_BOXES` can't drift apart;
-    - check the swim threshold with the project lead: the app uses 110 MPN
-      and calls it EPA's Beach Action Value, and shows no geometric-mean
-      standard line.
 12. **RTA2 gaps (optional).** 17 of the 113 RTA2 report PDFs yielded no
     rows: weeks 1–8 (Jun–Aug 2024) use an earlier table layout with a
     `9SB` station and merged cells that defeat extraction (recoverable

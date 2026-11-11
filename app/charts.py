@@ -15,10 +15,12 @@ def series():
     return _SERIES['dark' if st.context.theme.type == 'dark' else 'light']
 
 
-def threshold_rule(value, label):
-    """A dashed horizontal reference line with its label at the left."""
+def threshold_rule(value, label, color=REFERENCE):
+    """A dashed horizontal reference line with its label at the left. Pass the
+    color of the marks it judges when a chart has two standards for two kinds
+    of mark."""
     df = pd.DataFrame({'y': [value], 'label': [label]})
-    rule = alt.Chart(df).mark_rule(color=REFERENCE, strokeDash=[4, 4], strokeWidth=1.5).encode(y='y:Q')
-    text = alt.Chart(df).mark_text(align='left', dx=4, dy=-6, color=REFERENCE).encode(
+    rule = alt.Chart(df).mark_rule(color=color, strokeDash=[4, 4], strokeWidth=1.5).encode(y='y:Q')
+    text = alt.Chart(df).mark_text(align='left', dx=4, dy=-6, color=color).encode(
         y='y:Q', x=alt.value(0), text='label:N')
     return rule + text

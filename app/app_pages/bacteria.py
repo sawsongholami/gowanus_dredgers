@@ -15,6 +15,7 @@ access.require('bacteria')
 st.title('Is the canal safe to swim in?')
 df = data.enterococcus()
 threshold = data.SWIM_THRESHOLD_MPN
+gm_standard = data.GEO_MEAN_STANDARD_MPN
 
 st.markdown(f"""
 Mostly not, and least of all after rain. Volunteers collect a water sample
@@ -22,8 +23,10 @@ most Thursdays from May to October, and a lab counts **Enterococcus**: gut
 bacteria that show sewage is in the water. In heavy rain the sewers
 overflow into the canal, and the count jumps.
 
-The line to watch is **{threshold} MPN** (bacteria per 100 mL of water).
-Above it, a beach would be posted as unsafe for swimming.
+New York State sets two lines for swimming beaches, in MPN (bacteria per
+100 mL of water). **No single sample may be over {threshold} MPN**, and over
+any 30 days, the **geometric mean of five or more samples may not be over
+{gm_standard} MPN**. A beach that fails either is closed to swimming.
 """)
 
 c1, c2, c3, c4 = st.columns(4)
@@ -40,39 +43,52 @@ GEO_MEAN_NOTE = ('The **geometric mean** is the standard summary for bacteria co
                  'geometric mean averages the counts by their order of magnitude (10, 100, 1,000) '
                  'instead, so no single sample swamps the rest. Results '
                  'the lab reported as "<10" count as 10, and ">24,196" as 24,196.')
+RATING_NOTE = (f'**Rating** follows the Citizens\' Water Quality Testing programme: a geometric mean of '
+               f'{gm_standard} MPN or less is *good*, over {gm_standard} up to {threshold} is *advisory*, and '
+               f'over {threshold} is *poor*. The state standard applies {gm_standard} MPN to 30-day '
+               'stretches of sampling, so a geometric mean over a whole year or a whole site\'s record '
+               'is a yardstick for comparison, not a pass or fail.')
 
 # --- Every sample, by year --------------------------------------------------
 # Each dot is one sample, so a year's spread and its sample count are both
 # visible -- a share-over-threshold bar hides how few samples some years had.
 sections.heading('Has the water been getting cleaner?')
-st.markdown('**Every sample, by year.** Each dot is one sample; the orange bar is that '
-            "year's geometric mean. If the canal were getting cleaner, the bars would step down.")
+st.markdown('**Every sample, by year.** Each dot is one sample, judged against the '
+            f'{threshold} MPN single-sample line. The orange bar is that year\'s geometric mean, '
+            f'judged against the orange {gm_standard} MPN line. If the canal were getting cleaner, '
+            'the bars would step down.')
 
 yearly = df.groupby('year').agg(
     geo_mean=('mpn', data.geo_mean), samples=('mpn', 'size'), pct_over=('over_threshold', 'mean'),
 ).reset_index()
+yearly.insert(2, 'rating', yearly.geo_mean.map(data.rating))
 years = sorted(df.year.unique())
 picked = st.selectbox('Year', ['All years'] + [str(y) for y in reversed(years)],
                       help='Pick one year to see its samples week by week.')
-rule = charts.threshold_rule(threshold, f'{threshold} MPN')
+rule = charts.threshold_rule(threshold, f'{threshold} MPN, single sample')
 geo_color = charts.series()[1]
+gm_rule = charts.threshold_rule(gm_standard, f'{gm_standard} MPN, geometric mean', color=geo_color)
+
+# Year labels at 45 degrees: Altair stands them on end by default.
+year_x = alt.X('year:O', title=None, axis=alt.Axis(labelAngle=-45))
 
 if picked == 'All years':
     shown = df
     dots = alt.Chart(df).mark_circle(size=40, opacity=0.45, color=charts.series()[0]).encode(
-        x=alt.X('year:O', title=None),
+        x=year_x,
         # Jitter within the middle of each year's band, leaving gaps between years.
         xOffset=alt.XOffset('jitter:Q', scale=alt.Scale(domain=[-0.5, 1.5])),
         y=log_y,
         tooltip=[alt.Tooltip('date:T', format='%Y-%m-%d'), 'site:N', alt.Tooltip('mpn:Q', format=',')],
     ).transform_calculate(jitter='random()')
     marks = alt.Chart(yearly).mark_tick(color=geo_color, thickness=3, size=36).encode(
-        x=alt.X('year:O', title=None),
+        x=year_x,
         y=alt.Y('geo_mean:Q', scale=alt.Scale(type='log')),
         tooltip=[alt.Tooltip('year:O'), alt.Tooltip('geo_mean:Q', title='geometric mean (MPN)', format=',.0f'),
-                 alt.Tooltip('samples:Q'), alt.Tooltip('pct_over:Q', title=f'over {threshold}', format='.0%')],
+                 alt.Tooltip('rating:N'), alt.Tooltip('samples:Q'),
+                 alt.Tooltip('pct_over:Q', title=f'over {threshold}', format='.0%')],
     )
-    st.altair_chart(dots + marks + rule, width='stretch')
+    st.altair_chart(dots + marks + rule + gm_rule, width='stretch')
 else:
     shown = df[df.year == int(picked)]
     stats = yearly[yearly.year == int(picked)].iloc[0]
@@ -84,15 +100,15 @@ else:
         tooltip=[alt.Tooltip('date:T', format='%Y-%m-%d'), 'site:N', alt.Tooltip('mpn:Q', format=',')],
     )
     gm = pd.DataFrame({'y': [stats.geo_mean], 'label': [f'{picked} geometric mean: {stats.geo_mean:,.0f} MPN']})
-    gm_rule = alt.Chart(gm).mark_rule(color=geo_color, strokeWidth=3).encode(y='y:Q')
+    gm_line = alt.Chart(gm).mark_rule(color=geo_color, strokeWidth=3).encode(y='y:Q')
     gm_text = alt.Chart(gm).mark_text(align='right', dx=-4, dy=-8, color=geo_color, fontWeight='bold').encode(
         y='y:Q', x=alt.value('width'), text='label:N')
-    st.altair_chart(dots + gm_rule + gm_text + rule, width='stretch')
-    st.caption(f'{picked}: {stats.samples:,.0f} samples, geometric mean {stats.geo_mean:,.0f} MPN, '
-               f'{stats.pct_over:.0%} over the threshold.')
+    st.altair_chart(dots + gm_line + gm_text + rule + gm_rule, width='stretch')
+    st.caption(f'{picked}: {stats.samples:,.0f} samples, {stats.pct_over:.0%} over {threshold} MPN; '
+               f'geometric mean {stats.geo_mean:,.0f} MPN ({stats.rating}).')
 
 with st.expander('How to read this'):
-    st.markdown(GEO_MEAN_NOTE + '\n\n'
+    st.markdown(GEO_MEAN_NOTE + '\n\n' + RATING_NOTE + '\n\n'
                 'The axis is a **log scale**: each gridline is ten times the one below, because '
                 'counts run from under 10 to over 24,000. Years have between '
                 f'{yearly.samples.min()} and {yearly.samples.max()} samples, so a single '
@@ -100,11 +116,62 @@ with st.expander('How to read this'):
     st.dataframe(yearly, hide_index=True, column_config={
         'year': st.column_config.NumberColumn('Year', format='%d'),
         'geo_mean': st.column_config.NumberColumn('Geometric mean (MPN)', format='%.0f'),
+        'rating': 'Rating',
         'samples': 'Samples',
         'pct_over': st.column_config.NumberColumn(f'Share over {threshold}', format='percent'),
     })
 site_map.show({'Sampled for bacteria' + ('' if picked == 'All years' else f' in {picked}'):
                sorted(shown.site.unique())})
+
+# --- The state's 30-day test ------------------------------------------------
+# How the state actually applies 35 MPN: a site's geometric mean over 30 days,
+# counted only when those 30 days hold five or more samples.
+sections.heading("Did it pass the state's 30-day test?")
+st.markdown(f'**Share of 30-day stretches that met the {gm_standard} MPN standard, by year.** '
+            f'For every day a site was sampled, this takes the geometric mean of that site\'s '
+            f'samples over the 30 days ending that day, as the state does for beaches. Stretches '
+            f'with fewer than {data.GEO_MEAN_MIN_SAMPLES} samples are left out, because the standard '
+            'needs five. A taller bar is a cleaner year.')
+windows = data.rolling_geo_mean(df)
+counted = windows[windows.qualifies]
+if len(counted):
+    by_year = counted.groupby('year').agg(
+        stretches=('rating', 'size'),
+        good=('rating', lambda r: (r == 'good').mean()),
+        advisory=('rating', lambda r: (r == 'advisory').mean()),
+        poor=('rating', lambda r: (r == 'poor').mean()),
+        sites=('site', 'nunique'),
+    ).reset_index()
+    by_year['left_out'] = by_year.year.map(windows[~windows.qualifies].groupby('year').size()).fillna(0).astype(int)
+    bars = alt.Chart(by_year).mark_bar(color=charts.series()[0], cornerRadiusTopLeft=4,
+                                       cornerRadiusTopRight=4).encode(
+        x=year_x,
+        y=alt.Y('good:Q', title=f'30-day stretches at or under {gm_standard} MPN',
+                axis=alt.Axis(format='%'), scale=alt.Scale(domain=[0, 1])),
+        tooltip=[alt.Tooltip('year:O'),
+                 alt.Tooltip('good:Q', title=f'met {gm_standard} (good)', format='.0%'),
+                 alt.Tooltip('advisory:Q', title='advisory', format='.0%'),
+                 alt.Tooltip('poor:Q', title=f'over {threshold} (poor)', format='.0%'),
+                 alt.Tooltip('stretches:Q', title='stretches counted'),
+                 alt.Tooltip('sites:Q')],
+    )
+    st.altair_chart(bars, width='stretch')
+    st.caption(f'Across all years, {counted.rating.eq("good").mean():.0%} of {len(counted):,} counted '
+               f'30-day stretches met {gm_standard} MPN and {counted.rating.eq("poor").mean():.0%} were '
+               f'over {threshold}. Stretches overlap, since each sampling day ends one.')
+    with st.expander('The numbers'):
+        st.markdown(RATING_NOTE.split(' The state standard')[0])
+        st.dataframe(by_year, hide_index=True, column_config={
+            'year': st.column_config.NumberColumn('Year', format='%d'),
+            'stretches': 'Stretches counted',
+            'good': st.column_config.NumberColumn('Good', format='percent'),
+            'advisory': st.column_config.NumberColumn('Advisory', format='percent'),
+            'poor': st.column_config.NumberColumn('Poor', format='percent'),
+            'sites': 'Sites',
+            'left_out': st.column_config.NumberColumn('Left out (under 5 samples)'),
+        })
+else:
+    st.info(f'No site has {data.GEO_MEAN_MIN_SAMPLES} samples within 30 days, so the test can\'t be applied.')
 
 # --- Rain before sampling ---------------------------------------------------
 sections.heading('What does rain do?')
@@ -132,7 +199,7 @@ dry = rain[rain.rain_72h_in < 0.1]
 wet = rain[rain.rain_72h_in >= 0.25]
 if len(dry) and len(wet):
     st.caption(f'After under 0.1 in of rain, {dry.over_threshold.mean():.0%} of {len(dry):,} samples '
-               f'were over the threshold (geometric mean {data.geo_mean(dry.mpn):,.0f} MPN). '
+               f'were over {threshold} MPN (geometric mean {data.geo_mean(dry.mpn):,.0f} MPN). '
                f'After 0.25 in or more, {wet.over_threshold.mean():.0%} of {len(wet):,} were '
                f'(geometric mean {data.geo_mean(wet.mpn):,.0f} MPN).')
 
@@ -157,7 +224,7 @@ near_high = tide[tide.hours_from_high_tide.abs() <= 2]
 near_low = tide[tide.hours_from_high_tide.abs() >= 4.2]
 if len(near_high) and len(near_low):
     st.caption(f'Within 2 hours of high tide: geometric mean {data.geo_mean(near_high.mpn):,.0f} MPN, '
-               f'{near_high.over_threshold.mean():.0%} of {len(near_high):,} samples over the threshold. '
+               f'{near_high.over_threshold.mean():.0%} of {len(near_high):,} samples over {threshold} MPN. '
                f'Within 2 hours of low tide: {data.geo_mean(near_low.mpn):,.0f} MPN, '
                f'{near_low.over_threshold.mean():.0%} of {len(near_low):,}. '
                "Tide times are the sampling programme's own, for the Battery, a few minutes off the "
@@ -173,12 +240,14 @@ by_site = df.groupby('site').agg(
     first=('year', 'min'),
     last=('year', 'max'),
 ).reset_index().sort_values('geo_mean', ascending=False)
+by_site.insert(3, 'rating', by_site.geo_mean.map(data.rating))
 st.dataframe(
     by_site, hide_index=True,
     column_config={
         'site': 'Site',
         'samples': 'Samples',
         'geo_mean': st.column_config.NumberColumn('Geometric mean (MPN)', format='%.0f'),
+        'rating': 'Rating',
         'pct_over': st.column_config.ProgressColumn(f'Share over {threshold}', format='percent',
                                                     min_value=0, max_value=1),
         'first': st.column_config.NumberColumn('First year', format='%d'),
@@ -186,8 +255,9 @@ st.dataframe(
     },
 )
 st.caption('Sites were sampled in different years and in different numbers, so a site with few '
-           'samples can rank high or low by chance.')
+           'samples can rank high or low by chance. ' + RATING_NOTE.replace('**Rating**', 'Rating'))
 site_map.show({'Sampled for bacteria': sorted(df.site.unique())})
 
 st.caption('Source: Citizens\' Water Quality Testing programme (SwimmableNYC and the Billion Oyster '
-           f'Project). {threshold} MPN/100 mL is the EPA Beach Action Value.')
+           f'Project). Standards: New York State bathing-beach rules (10 NYCRR Subpart 6-2), '
+           f'{threshold} MPN/100 mL for a single sample and {gm_standard} for a 30-day geometric mean.')
