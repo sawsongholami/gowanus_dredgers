@@ -641,7 +641,10 @@ Empty tables and what fills them:
     Google test users plus the viewer list). Publishing either one waits
     on the project lead's OK for the Duro and CWQT data, and the club
     wants to read the chart pages through before they go public (project
-    lead, 2026-11-11). Still open:
+    lead, 2026-11-11). Asked her on 2026-11-11, waiting on a reply: who
+    does the read-through (their Google emails, to add as viewers), and
+    whether CWQT's data can be published or SwimmableNYC and Billion
+    Oyster Project need asking first. Still open:
     - refreshing the static page's data automatically once `main.py` runs
       on a schedule (item 10);
     - **let the app read tides:** re-run the grants in `db/app_reader.sql`
