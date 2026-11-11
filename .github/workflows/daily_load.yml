@@ -68,3 +68,9 @@ jobs:
       - name: Observation survey -> observations
         if: ${{ !cancelled() }}
         run: python observations.py
+      - name: Advisory Tracker -> waterbody_advisories
+        if: ${{ !cancelled() }}
+        run: python advisories.py
+      - name: DEP Harbor Survey -> harbor_survey
+        if: ${{ !cancelled() }}
+        run: python harbor_survey.py
