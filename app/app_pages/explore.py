@@ -110,8 +110,6 @@ if len(picked) >= 2:
 site_map.show({'Monitoring sites': list(site_map.SITES)}, label='Map: the monitoring sites',
               note='The daily numbers on this page combine every site into one value for the canal.')
 
-if len(available) < len(data.MEASURES):
-    st.caption('Tide predictions are not available here yet.')
 st.caption('Things to know: the sonde readings (oxygen, water temperature, salinity) come from '
            'short daytime outings, August 2023 to October 2024. Turbidity before April 2024 is '
            'the upper canal (RTA1) and after August 2024 the middle canal (RTA2). Rain and air '

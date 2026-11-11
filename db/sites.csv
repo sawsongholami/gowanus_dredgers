@@ -1,0 +1,48 @@
+site,kind,rta_zone,lat_min,lat_max,lon_min,lon_max,lat,lon,source,note
+Douglass_St,sampling site,RTA1,40.681146,40.681800,-73.987417,-73.986699,,,Duro Data Dictionary GPS box,
+Carroll_St,sampling site,RTA1,40.677811,40.678560,-73.989500,-73.988900,,,Duro Data Dictionary GPS box,
+First_St,sampling site,RTA1,40.677160,40.677810,-73.989600,-73.989100,,,Duro Data Dictionary GPS box,
+Second_St,sampling site,RTA1,40.676510,40.677090,-73.990200,-73.989100,,,Duro Data Dictionary GPS box,
+Third_St,sampling site,RTA1,40.675800,40.676500,-73.990700,-73.989680,,,Duro Data Dictionary GPS box,
+WholeFoodsWest,sampling site,RTA2,40.675588,40.675800,-73.990600,-73.990300,,,Duro Data Dictionary GPS box,
+Third_Ave,sampling site,RTA2,40.674000,40.674619,-73.989400,-73.988600,,,Duro Data Dictionary GPS box,
+Fourth_St_TB,sampling site,RTA2,40.674514,40.675214,-73.990710,-73.989410,,,Duro Data Dictionary GPS box,
+Second_Ave,sampling site,RTA2,40.675137,40.675600,-73.991202,-73.990293,,,Duro Data Dictionary GPS box,
+Bond_St,sampling site,RTA1,40.675851,40.676160,-73.992913,-73.992287,,,Duro Data Dictionary GPS box,
+Sixth_St_TB,sampling site,RTA2,40.674668,40.675067,-73.992622,-73.992123,,,Duro Data Dictionary GPS box,
+Seventh_St_TB,sampling site,RTA2,40.674282,40.674745,-73.994500,-73.993850,,,Duro Data Dictionary GPS box,
+Seventh_St_Canal,sampling site,RTA2,40.674973,40.675311,-73.995776,-73.995374,,,Duro Data Dictionary GPS box,
+Huntington_St,sampling site,RTA2,40.674564,40.674972,-73.996249,-73.995530,,,Duro Data Dictionary GPS box,
+Ninth_St_Bridge,sampling site,RTA2,40.673608,40.674563,-73.996780,-73.996292,,,Duro Data Dictionary GPS box,
+South_of_Ninth_St_Bridge,sampling site,RTA2,40.673448,40.673607,-73.997244,-73.996707,,,Duro Data Dictionary GPS box,
+Eleventh_St_TB,sampling site,RTA2,40.672525,40.672945,-73.997413,-73.996770,,,Duro Data Dictionary GPS box,
+Hamilton_Bridge,sampling site,RTA2,40.671043,40.672157,-73.999015,-73.998146,,,Duro Data Dictionary GPS box,
+South_of_Hamilton_Bridge,sampling site,RTA3,40.670736,40.671042,-73.999197,-73.998618,,,Duro Data Dictionary GPS box,
+Sanitation_TB,sampling site,RTA3,40.668872,40.669653,-73.999080,-73.998189,,,Duro Data Dictionary GPS box,
+GD_Bunker,sampling site,RTA3,40.667439,40.667806,-74.000340,-73.999970,,,Duro Data Dictionary GPS box,
+Mouth,sampling site,RTA3,40.666694,40.667386,-74.003252,-74.002297,,,Duro Data Dictionary GPS box,
+Lowlands,sampling site,RTA2,,,,,40.674319,-73.996460,"Project lead pin, 2026-11-11","CWQT site: Gowanus Canal, Lowlands Nursery"
+Dentons_Pond,sampling site,,,,,,,,,CWQT site: Denton's Pond Outfall. Location unknown (near Whole Foods); asked 2026-11-11
+RTA1_ambient_buoy,turbidity buoy,,,,,,40.67480,-73.98930,"RTA1 weekly reports, approximate","Eastern end of the Fourth St Turning Basin, Aug 2023 - Apr 2024"
+RTA2_ambient_buoy,turbidity buoy,,,,,,40.67836,-73.98925,"RTA2 weekly reports, approximate",Moved between Union St and Carroll St bridges; mostly 50-80 ft north of Carroll St Bridge
+HS_GC3,harbor survey station,,,,,,40.67943,-73.98824,"NYC Open Data 5uug-f49n, usual position","DEP Harbor Survey GC3: Head of the canal, near Butler St"
+HS_GC4,harbor survey station,,,,,,40.67803,-73.98907,"NYC Open Data 5uug-f49n, usual position",DEP Harbor Survey GC4: Near Carroll St
+HS_GC5,harbor survey station,,,,,,40.67614,-73.99005,"NYC Open Data 5uug-f49n, usual position",DEP Harbor Survey GC5: Near 3rd St
+HS_GC6,harbor survey station,,,,,,40.67417,-73.99639,"NYC Open Data 5uug-f49n, usual position",DEP Harbor Survey GC6: Near 9th St
+HS_G2,harbor survey station,,,,,,40.666667,-74.003333,"NYC Open Data 5uug-f49n, usual position",DEP Harbor Survey G2: Mouth of the canal
+CSO_OH-005,cso outfall,,,,,,40.678044,-73.989013,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Owls Head WPCP outfall into Gowanus Canal
+CSO_OH-006,cso outfall,,,,,,40.667487,-74.000313,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Owls Head WPCP outfall into Gowanus Canal
+CSO_OH-007,cso outfall,,,,,,40.675536,-73.990946,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Owls Head WPCP outfall into Gowanus Canal
+CSO_OH-022,cso outfall,,,,,,40.660117,-74.007959,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Owls Head WPCP outfall into Gowanus Bay
+CSO_OH-024,cso outfall,,,,,,40.663642,-74.000325,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Owls Head WPCP outfall into Gowanus Canal
+CSO_OH-025,cso outfall,,,,,,40.661944,-74.006317,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Owls Head WPCP outfall into Gowanus Bay
+CSO_OH-026,cso outfall,,,,,,40.664217,-73.999708,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Owls Head WPCP outfall into Gowanus Canal
+CSO_RH-030,cso outfall,,,,,,40.6686,-74.007369,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Red Hook WPCP outfall into Gowanus Canal
+CSO_RH-030A,cso outfall,,,,,,40.668597,-74.007238,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Red Hook WPCP outfall into Gowanus Canal
+CSO_RH-031,cso outfall,,,,,,40.671423,-73.998917,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Red Hook WPCP outfall into Gowanus Canal
+CSO_RH-033,cso outfall,,,,,,40.681317,-73.986912,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Red Hook WPCP outfall into Gowanus Canal
+CSO_RH-034,cso outfall,,,,,,40.681694,-73.986846,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Red Hook WPCP outfall into Gowanus Canal
+CSO_RH-035,cso outfall,,,,,,40.676106,-73.992566,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Red Hook WPCP outfall into Gowanus Canal
+CSO_RH-036,cso outfall,,,,,,40.678766,-73.988608,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Red Hook WPCP outfall into Gowanus Canal
+CSO_RH-037,cso outfall,,,,,,40.680033,-73.987739,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Red Hook WPCP outfall into Gowanus Canal
+CSO_RH-038,cso outfall,,,,,,40.680677,-73.987325,NY Open Data ephi-ffu6 (data as of 2015),NYCDEP - Red Hook WPCP outfall into Gowanus Canal

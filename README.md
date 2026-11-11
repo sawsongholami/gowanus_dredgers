@@ -82,7 +82,13 @@ data_import/          all runnable Python (loaders import each other as
   weather.py          Open-Meteo hourly weather -> weather
   tide_predictions.py NOAA CO-OPS tide predictions -> tide_predictions
   observations.py     Google Form responses -> observations
+  advisories.py       Advisory Tracker sheet -> waterbody_advisories
+  harbor_survey.py    DEP Harbor Survey (NYC Open Data) -> harbor_survey
+  sites.py            db/sites.csv -> sites (run by apply_schema.py)
+  apply_app_grants.py re-applies the app login's read grants
 db/schema.sql         complete database definition (tables + views)
+db/sites.csv          the one list of sites, buoys, survey stations and
+                      CSO outfalls, with their locations and RTA zones
 dashboard/            the public dashboard (static; see "Dashboard" below)
   build_data.py       views/snapshot -> data/dashboard.{json,js}
   index.html          the page itself
@@ -97,10 +103,11 @@ app/                  the Streamlit app (see "Streamlit app" below)
   assets/             the Dredgers' logo (SVG, top-left corner) and its
                       square PNG copy (browser-tab icon; Safari skips SVG)
   data.py             read-only queries and summaries
+  standards.py        the water quality standards (also read by build_data.py)
   app_pages/          one file per page
 db/app_reader.sql     one-time setup of the app's read-only login
 data_import/viewers.py  add/remove people who can see the app
-tests/                the app's access tests (pytest tests/)
+tests/                access, standards and loader-cleaning tests (pytest tests/)
 data/                 local file cache, not part of git. Raw inputs named
                       by the table they feed:
   duro/               229 daily sonde CSVs (the loader's input)
@@ -138,13 +145,15 @@ python duro.py --dry-run   # every loader supports --dry-run (parse, no write)
 | `observations` | one row per survey submission | empty (form is live, no responses yet) | Google Form -> response sheet (public), loaded by `observations.py` |
 | `tide_predictions` | one row per predicted high/low tide | **22,173 rows**, Jan 2012 – Sept 2027 | NOAA CO-OPS API, station 8517921 (Gowanus Bay). Free, no key |
 | `weather` | one row per hour | **~129,000 rows**, Jan 2012 – present | Open-Meteo historical API (ERA5 reanalysis) at the canal. Free, no key |
-| `waterbody_advisories` | placeholder (`id` only) | **empty — table not designed** | NYC DEP advisories page + the manually-updated "Advisory Tracker" sheet in Drive |
+| `waterbody_advisories` | one row per hand check of DEP's advisory page, per area (inner / outer canal) | **1,438 rows**, May 2024 – June 2026 (2026-11-11) | The project lead's "Advisory Tracker" sheet (link-shared), replaced whole by `advisories.py` daily |
+| `harbor_survey` | one row per DEP boat-survey sample at a canal station | **2,723 rows**, 1909 – Dec 2025, stations GC3–GC6 and G2 | NYC Open Data "Harbor Water Quality" (5uug-f49n), upserted by `harbor_survey.py` daily. Free, no key |
+| `sites` | one row per place: sampling site, turbidity buoy, Harbor Survey station, CSO outfall | **47 rows** | Copy of `db/sites.csv`, the one version-controlled list; reloaded by `sites.py` whenever the schema is applied |
 
 **Views** (all computed on demand — a view is a saved query, so it is
 never "out of date": load new rows and every view reflects them on the
 next read): `duro_filtered` (readings at a known site, in water —
 reproduces the R pipeline's filter), `site_zones` (site → RTA cleanup
-zone, joinable to `duro`, `cwqt` and `observations`),
+zone, joinable to `duro`, `cwqt` and `observations`; read from `sites`),
 `daily_site_summary` (per-day/site DO, temperature, salinity, pH stats,
 carrying `rta_zone`), `rain_windows`
 (rolling 24/48/72-hour rainfall ending at each hour — the join target for
@@ -517,6 +526,9 @@ for rebuilding it elsewhere):
 3. **Create the read-only login:** open `db/app_reader.sql`, paste it into
    the Supabase SQL editor with a new long random password in place of the
    placeholder, and run it. Save the password only in the Secrets below.
+   Later grant changes (a new table for the app) don't need the editor:
+   `python data_import/apply_app_grants.py` re-runs everything below the
+   `CREATE ROLE` line.
 4. **Add yourself:** `python data_import/viewers.py add you@gmail.com admin`.
 5. **Google sign-in.** In Google Cloud Console, create a project; under
    *Google Auth Platform*, set up the consent screen (External; scopes
@@ -593,24 +605,25 @@ Empty tables and what fills them:
    For storm surge — plausibly relevant to CSO and fish-kill events —
    the nearest real gauge is The Battery (8518750, product
    `water_level`); the same loader would extend to it.
-4. **`waterbody_advisories`** — design the table (current placeholder has
-   only `id`), then load from the "Advisory Tracker" sheet in Drive
-   (manually maintained, still updated) and/or scrape the NYC DEP
-   waterbody-advisories page.
+4. **`waterbody_advisories`** — done (2026-11-11), from the Advisory
+   Tracker sheet. Its last entry is June 2026, so the log has gone quiet;
+   if nobody keeps it up, scraping DEP's waterbody-advisory page daily is
+   the replacement. The sheet's "Flushing Tunnel" tab (daily % open, Aug
+   2025 on) is not loaded yet: its early dates lack a year.
 5. **`observations`** — nothing to build; rows appear when people submit
    the form. Consider finalizing the placeholder organism checklists in
    the form (marked TODO in the Apps Script) before promoting it.
-6. **CSO events (no table yet)** — Drive has a stale 2013–2023 export of
-   the NY Open Data "Combined Sewer Overflows" dataset; a loader could
-   pull the live Socrata API instead. Valuable context for bacteria and
-   salinity spikes.
-7. **NYC DEP Harbor Survey (no table yet)** — a *separate* monitoring
-   program from CWQT, with its own long-running DO / bacteria record for
-   the canal. Drive's `Other_Water_Data/` has a shortcut ("Gowanus Canal
-   Water Quality Testing Data (DEP Harbor Water Quality)") whose target
-   this project has not yet opened; DEP also publishes harbor survey data
-   on NYC Open Data. Would give the Dredgers' own sonde readings an
-   independent agency baseline to compare against.
+6. **CSO events — no source found (checked 2026-11-11).** The NY Open
+   Data "Combined Sewer Overflows" dataset (ephi-ffu6, and the Drive copy
+   of it) is a 2015 list of outfalls, not events; for NYC's outfalls it
+   only says "visit facility website". Its 16 Gowanus outfalls are now in
+   `db/sites.csv` (kind `cso outfall`). The closest event record we have
+   is `waterbody_advisories`: DEP posts an advisory when it models an
+   overflow. Event data would have to come from DEP directly.
+7. **NYC DEP Harbor Survey** — loaded (2026-11-11) into `harbor_survey`
+   from NYC Open Data. Not charted yet: a natural next step is to set its
+   oxygen and Enterococcus beside the Dredgers' sonde and CWQT (it needs
+   adding to `db/app_reader.sql` first).
 8. **Duro is closed.** The sonde broke (reported 2026-11-03) and no
    replacement is planned, so `duro` (Aug 21, 2023 – Oct 18, 2024) is now a
    finished historical dataset. One last check before calling it final: look
@@ -645,11 +658,10 @@ Empty tables and what fills them:
     does the read-through (their Google emails, to add as viewers), and
     whether CWQT's data can be published or SwimmableNYC and Billion
     Oyster Project need asking first. Still open:
-    - refreshing the static page's data automatically once `main.py` runs
-      on a schedule (item 10);
-    - **let the app read tides:** re-run the grants in `db/app_reader.sql`
-      (everything below the `CREATE ROLE` line) in the Supabase SQL editor.
-      Until then the explorer leaves the tide dataset out;
+    - refreshing the static page's data automatically: waits on the
+      publishing OK. Its data file is a summary of the Duro and CWQT data,
+      and the only places a scheduled job could put it (a commit to this
+      public repo, or a public host) would publish it;
     - the About page now carries the partners' draft website copy (the
       "Dashboard / Website Copy" tab of the SOW doc). Its figures (CSO
       gallons, apartment counts, tank sizes and dates, the August 2024
@@ -661,10 +673,7 @@ Empty tables and what fills them:
       buoys are placed approximately, from the weekly reports' "Buoy
       Locations" text: RTA1's in the eastern end of the Fourth St Turning
       Basin, RTA2's just north of Carroll St Bridge; see `BUOYS` in
-      `site_map.py`.);
-    - move site coordinates into the database (a `sites` view in
-      `schema.sql`) so the app's copy in `site_map.py` and the loader's
-      `SITE_BOXES` can't drift apart;
+      `db/sites.csv`.);
 12. **RTA2 gaps (optional).** 17 of the 113 RTA2 report PDFs yielded no
     rows: weeks 1–8 (Jun–Aug 2024) use an earlier table layout with a
     `9SB` station and merged cells that defeat extraction (recoverable

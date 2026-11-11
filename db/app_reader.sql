@@ -15,6 +15,7 @@ CREATE ROLE app_reader LOGIN PASSWORD 'replace-with-a-long-random-password';
 -- Everything below is safe to re-run. Re-run it after giving the app a
 -- new view or table to read: new objects are NOT granted automatically,
 -- on purpose, so a new raw table never becomes readable by accident.
+-- data_import/apply_app_grants.py runs this part without the SQL editor.
 
 GRANT USAGE ON SCHEMA public TO app_reader;
 

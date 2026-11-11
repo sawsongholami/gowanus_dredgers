@@ -26,6 +26,7 @@ import numpy as np
 import pandas as pd
 
 import apply_schema
+import sites
 import write_to_db
 
 DIR_THIS_DATA = pl.Path(__file__).parent.parent.absolute() / 'data' / 'duro'
@@ -69,31 +70,9 @@ NUMERIC_COLS = [
 ]
 
 # Site bounding boxes (lat_min, lat_max, lon_min, lon_max), transcribed from
-# the "Duro Data Dictionary" doc on the shared drive. First match wins.
-SITE_BOXES = [
-    ('Douglass_St',              40.681146, 40.681800, -73.987417, -73.986699),
-    ('Carroll_St',               40.677811, 40.678560, -73.989500, -73.988900),
-    ('First_St',                 40.677160, 40.677810, -73.989600, -73.989100),
-    ('Second_St',                40.676510, 40.677090, -73.990200, -73.989100),
-    ('Third_St',                 40.675800, 40.676500, -73.990700, -73.989680),
-    ('WholeFoodsWest',           40.675588, 40.675800, -73.990600, -73.990300),
-    ('Third_Ave',                40.674000, 40.674619, -73.989400, -73.988600),
-    ('Fourth_St_TB',             40.674514, 40.675214, -73.990710, -73.989410),
-    ('Second_Ave',               40.675137, 40.675600, -73.991202, -73.990293),
-    ('Bond_St',                  40.675851, 40.676160, -73.992913, -73.992287),
-    ('Sixth_St_TB',              40.674668, 40.675067, -73.992622, -73.992123),
-    ('Seventh_St_TB',            40.674282, 40.674745, -73.994500, -73.993850),
-    ('Seventh_St_Canal',         40.674973, 40.675311, -73.995776, -73.995374),
-    ('Huntington_St',            40.674564, 40.674972, -73.996249, -73.995530),
-    ('Ninth_St_Bridge',          40.673608, 40.674563, -73.996780, -73.996292),
-    ('South_of_Ninth_St_Bridge', 40.673448, 40.673607, -73.997244, -73.996707),
-    ('Eleventh_St_TB',           40.672525, 40.672945, -73.997413, -73.996770),
-    ('Hamilton_Bridge',          40.671043, 40.672157, -73.999015, -73.998146),
-    ('South_of_Hamilton_Bridge', 40.670736, 40.671042, -73.999197, -73.998618),
-    ('Sanitation_TB',            40.668872, 40.669653, -73.999080, -73.998189),
-    ('GD_Bunker',                40.667439, 40.667806, -74.000340, -73.999970),
-    ('Mouth',                    40.666694, 40.667386, -74.003252, -74.002297),
-]
+# the "Duro Data Dictionary" doc on the shared drive into db/sites.csv, the
+# one list of sites. First match wins, in the CSV's order.
+SITE_BOXES = sites.site_boxes()
 
 MISSING_TOKENS = {'', '------'}
 

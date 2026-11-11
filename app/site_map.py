@@ -1,12 +1,12 @@
 """The canal map that opens from each section, showing where a figure's data comes from.
 
-SITES is the centre of each site's GPS box. The boxes themselves are defined
-in data_import/duro.py (SITE_BOXES, from the Duro Data Dictionary); this is a
-copy, because the app can't import the loaders. If a box changes there,
-change it here. Two CWQT sites have no box: Lowlands is placed from the
-project lead's pin (2026-11-11); Dentons Pond has no place on the map yet (its
-outfall is somewhere near Whole Foods; the lead is asking the sampler).
+Site locations come from db/sites.csv, the project's one list of sites (see
+data_import/sites.py). The map reads the file, not the database, so the
+public About page's map makes no database query.
 """
+
+import importlib.util
+import pathlib as pl
 
 import pandas as pd
 import pydeck as pdk
@@ -14,51 +14,29 @@ import streamlit as st
 
 import charts
 
-SITES = {
-    'Douglass St': (40.681473, -73.987058),
-    'Carroll St': (40.678186, -73.989200),
-    'First St': (40.677485, -73.989350),
-    'Second St': (40.676800, -73.989650),
-    'Third St': (40.676150, -73.990190),
-    'WholeFoodsWest': (40.675694, -73.990450),
-    'Third Ave': (40.674310, -73.989000),
-    'Fourth St TB': (40.674864, -73.990060),
-    'Second Ave': (40.675369, -73.990748),
-    'Bond St': (40.676006, -73.992600),
-    'Sixth St TB': (40.674868, -73.992373),
-    'Seventh St TB': (40.674514, -73.994175),
-    'Seventh St Canal': (40.675142, -73.995575),
-    'Huntington St': (40.674768, -73.995890),
-    'Ninth St Bridge': (40.674086, -73.996536),
-    'South of Ninth St Bridge': (40.673528, -73.996976),
-    'Eleventh St TB': (40.672735, -73.997092),
-    'Hamilton Bridge': (40.671600, -73.998581),
-    'South of Hamilton Bridge': (40.670889, -73.998908),
-    'Sanitation TB': (40.669263, -73.998635),
-    'GD Bunker': (40.667623, -74.000155),
-    'Mouth': (40.667040, -74.002775),
-    # CWQT only, no Duro box: a pin from the project lead, not a box centre.
-    'Lowlands': (40.674319, -73.996460),
-}
+# Load data_import/sites.py by path: it needs only pandas, and importing it
+# this way keeps the other loaders' modules off the app's import path.
+_spec = importlib.util.spec_from_file_location(
+    'gd_sites', pl.Path(__file__).parent.parent / 'data_import' / 'sites.py')
+_sites = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(_sites)
 
-# EPA cleanup zone of each site, north to south (db/schema.sql, site_zones).
-ZONES = {
-    'RTA1': ['Douglass St', 'Carroll St', 'First St', 'Second St', 'Third St', 'Bond St'],
-    'RTA2': ['WholeFoodsWest', 'Second Ave', 'Seventh St Canal', 'Sixth St TB', 'Huntington St',
-             'Fourth St TB', 'Seventh St TB', 'Third Ave', 'Ninth St Bridge',
-             'South of Ninth St Bridge', 'Eleventh St TB', 'Hamilton Bridge'],
-    'RTA3': ['South of Hamilton Bridge', 'Sanitation TB', 'GD Bunker', 'Mouth'],
-}
 
-# The turbidity buoys charted on the turbidity page, placed from the cleanup's
-# weekly reports, which describe positions in words, so these are approximate.
-# RTA1 (Aug 2023 - Apr 2024): "the eastern end of TB4" (Fourth St Turning Basin).
-# RTA2: between Union St and Carroll St bridges, moved a few times; mostly at or
-# about 50-80 ft north of Carroll St Bridge, which is where this puts it.
-BUOYS = {
-    'RTA1 ambient buoy': (40.67480, -73.98930),
-    'RTA2 ambient buoy': (40.67836, -73.98925),
-}
+def _name(slug):
+    return slug.replace('_', ' ')   # display form, as on the pages: 'Second St'
+
+
+_ALL = _sites.read_sites()
+_placed = _ALL.dropna(subset=['lat', 'lon'])
+_monitoring = _placed[_placed.kind == 'sampling site']
+_buoys = _placed[_placed.kind == 'turbidity buoy']
+
+# Centre (or pin) of each placed sampling site, north to south as in the CSV.
+SITES = {_name(r.site): (r.lat, r.lon) for r in _monitoring.itertuples()}
+# EPA cleanup zone of each site.
+ZONES = {z: [_name(s) for s in g.site] for z, g in _ALL[_ALL.kind == 'sampling site'].groupby('rta_zone')}
+# Turbidity buoys, placed approximately from the cleanup's weekly reports.
+BUOYS = {_name(r.site): (r.lat, r.lon) for r in _buoys.itertuples()}
 
 _OTHER = [138, 137, 132, 110]   # sites this figure doesn't use: recessive gray
 

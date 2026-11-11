@@ -141,8 +141,86 @@ CREATE TABLE IF NOT EXISTS weather (
     solar_wm2          double precision
 );
 
+------------------------------------------------------------------------
+-- Monitoring sites: a copy of db/sites.csv, the one version-controlled
+-- list, replaced whole by data_import/sites.py (which apply_schema runs).
+-- Edit the CSV, never this table. Duro sites have a GPS box; others have
+-- a single pin (lat/lon); lat/lon is the box centre where there is a box.
+------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS sites (
+    site      text PRIMARY KEY,   -- slug as stored in duro.site / cwqt.site
+    kind      text NOT NULL,      -- 'sampling site' or 'turbidity buoy'
+    rta_zone  text,
+    lat_min   double precision,
+    lat_max   double precision,
+    lon_min   double precision,
+    lon_max   double precision,
+    lat       double precision,
+    lon       double precision,
+    source    text,
+    note      text
+);
+
+------------------------------------------------------------------------
+-- NYC DEP wet-weather advisories for the canal, as checked by hand and
+-- logged in the project lead's "Advisory Tracker" sheet (May 2024 on).
+-- One row per check per area: DEP posts "Gowanus Canal, Inner" and
+-- "Outer" separately. Replaced whole by data_import/advisories.py on every
+-- run (the sheet is hand-edited and has no stable key); sheet_row points
+-- back to the line in the sheet. Times are New York local.
+-- (Replaced an empty placeholder with only an id column, 2026-11-11.)
+------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS waterbody_advisories (
-    id bigint PRIMARY KEY
+    sheet_row               integer PRIMARY KEY,
+    check_date              date NOT NULL,
+    checked_at              timestamp,  -- DEP page's server time when checked
+    area                    text NOT NULL,  -- 'inner' or 'outer'
+    on_advisory             boolean,    -- NULL: not recorded
+    advisory_until          timestamp,  -- end time DEP gave, when on advisory
+    rain_gauge              text,       -- DEP's gauge code, e.g. 'RH'
+    emailed                 boolean,    -- whether an advisory email went out
+    info_text               text,       -- raw "Advisory Info" text
+    notes                   text,
+    flushing_tunnel_status  text        -- raw, as logged
+);
+
+------------------------------------------------------------------------
+-- NYC DEP Harbor Survey samples at the canal's stations (GC3-GC6, G2 and a
+-- few one-off 2000-2003 stations), from NYC Open Data 5uug-f49n, 1909 on.
+-- DEP's own boat survey, independent of CWQT and the Dredgers' sonde.
+-- Loaded by data_import/harbor_survey.py, upserted on the source row id.
+-- Bacteria in cells/100 mL ("<10" stored as 10); top = near surface,
+-- bottom = near the bed. Station locations are in db/sites.csv.
+------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS harbor_survey (
+    obs_id                  text PRIMARY KEY,   -- the dataset's :id
+    station                 text NOT NULL,
+    sample_date             date NOT NULL,
+    sample_time             time,
+    weather                 text,               -- 'dry' or 'wet', DEP's call
+    site_depth_ft           double precision,
+    top_temp_c              double precision,
+    bottom_temp_c           double precision,
+    top_salinity_psu        double precision,
+    bottom_salinity_psu     double precision,
+    top_do_ctd_mg_l         double precision,   -- CTD profiler
+    bottom_do_ctd_mg_l      double precision,
+    top_do_winkler_mg_l     double precision,   -- Winkler titration
+    bottom_do_winkler_mg_l  double precision,
+    top_do_sat_pct          double precision,
+    bottom_do_sat_pct       double precision,
+    secchi_depth_ft         double precision,
+    top_ph                  double precision,
+    bottom_ph               double precision,
+    top_enterococci         double precision,
+    bottom_enterococci      double precision,
+    top_fecal_coliform      double precision,
+    bottom_fecal_coliform   double precision,
+    top_tss_mg_l            double precision,
+    bottom_tss_mg_l         double precision,
+    top_chlorophyll_a_ug_l  double precision,
+    lat                     double precision,   -- this visit's position, when logged
+    lon                     double precision
 );
 
 ------------------------------------------------------------------------
@@ -210,8 +288,9 @@ WHERE site IS NOT NULL
 -- Gowanus Bay (not started). Join this to duro.site / cwqt.site /
 -- observations.site to group readings by cleanup phase.
 --
--- Assignments apply the published street boundaries to each site's
--- latitude. Three sites sit within ~50 m of a boundary and should be
+-- The zones live in db/sites.csv with the rest of each site's details
+-- (loaded into `sites` by data_import/sites.py). Assignments apply the
+-- published street boundaries to each site's latitude. Three sites sit within ~50 m of a boundary and should be
 -- confirmed against EPA's own RTA figure before anything load-bearing
 -- rests on them: Third_St and Bond_St (called RTA1 here) and
 -- WholeFoodsWest (called RTA2) straddle the 3rd St line, and
@@ -219,30 +298,9 @@ WHERE site IS NOT NULL
 -- RTA1 includes part of the 5th Street turning basin, which is south of
 -- 3rd St -- so the true boundary is not a clean latitude cut.
 CREATE OR REPLACE VIEW site_zones AS
-SELECT * FROM (VALUES
-    ('Douglass_St',              'RTA1'),
-    ('Carroll_St',               'RTA1'),
-    ('First_St',                 'RTA1'),
-    ('Second_St',                'RTA1'),
-    ('Third_St',                 'RTA1'),
-    ('Bond_St',                  'RTA1'),
-    ('WholeFoodsWest',           'RTA2'),
-    ('Second_Ave',               'RTA2'),
-    ('Seventh_St_Canal',         'RTA2'),
-    ('Sixth_St_TB',              'RTA2'),
-    ('Huntington_St',            'RTA2'),
-    ('Fourth_St_TB',             'RTA2'),
-    ('Seventh_St_TB',            'RTA2'),
-    ('Third_Ave',                'RTA2'),
-    ('Ninth_St_Bridge',          'RTA2'),
-    ('South_of_Ninth_St_Bridge', 'RTA2'),
-    ('Eleventh_St_TB',           'RTA2'),
-    ('Hamilton_Bridge',          'RTA2'),
-    ('South_of_Hamilton_Bridge', 'RTA3'),
-    ('Sanitation_TB',            'RTA3'),
-    ('GD_Bunker',                'RTA3'),
-    ('Mouth',                    'RTA3')
-) AS t(site, rta_zone);
+SELECT site, rta_zone
+FROM sites
+WHERE kind = 'sampling site' AND rta_zone IS NOT NULL;
 
 -- Per-day, per-site summary for dashboards. Built on the filtered view so
 -- out-of-water and unlocated readings never skew the stats.
