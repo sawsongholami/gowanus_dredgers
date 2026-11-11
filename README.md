@@ -445,7 +445,8 @@ case is the old behaviour.
 Each page is framed as a question and explains its charts in plain
 language: *Is the canal safe to swim in?* (Enterococcus by year with each
 year's geometric mean, a one-year view, rain, tide at sampling time, and
-sites), *Can fish survive in the canal?* (dissolved oxygen),
+sites, and the city's Harbor Survey beside CWQT), *Can fish survive in
+the canal?* (dissolved oxygen, with the city's survey beside the sonde),
 *How much does dredging cloud the water?* (turbidity), and *Explore the
 data*, which puts any of the datasets side by side as one number per day.
 Bacteria are summarised with the geometric mean, the convention for
@@ -606,9 +607,9 @@ Empty tables and what fills them:
    the nearest real gauge is The Battery (8518750, product
    `water_level`); the same loader would extend to it.
 4. **`waterbody_advisories`** — done (2026-11-11), from the Advisory
-   Tracker sheet. Its last entry is June 2026, so the log has gone quiet;
-   if nobody keeps it up, scraping DEP's waterbody-advisory page daily is
-   the replacement. The sheet's "Flushing Tunnel" tab (daily % open, Aug
+   Tracker sheet. Its last entry is June 2026, so the log has gone quiet.
+   **Ask Corinne** whether anyone still keeps it; if not, scraping DEP's
+   waterbody-advisory page daily is the replacement. The sheet's "Flushing Tunnel" tab (daily % open, Aug
    2025 on) is not loaded yet: its early dates lack a year.
 5. **`observations`** — nothing to build; rows appear when people submit
    the form. Consider finalizing the placeholder organism checklists in
@@ -621,9 +622,10 @@ Empty tables and what fills them:
    is `waterbody_advisories`: DEP posts an advisory when it models an
    overflow. Event data would have to come from DEP directly.
 7. **NYC DEP Harbor Survey** — loaded (2026-11-11) into `harbor_survey`
-   from NYC Open Data. Not charted yet: a natural next step is to set its
-   oxygen and Enterococcus beside the Dredgers' sonde and CWQT (it needs
-   adding to `db/app_reader.sql` first).
+   from NYC Open Data, and charted: the oxygen page sets its near-surface
+   oxygen beside the sonde, the bacteria page its yearly geometric mean
+   beside CWQT, and the explorer has both as datasets. It is always the
+   third palette colour (aqua) so it reads as the same source everywhere.
 8. **Duro is closed.** The sonde broke (reported 2026-11-03) and no
    replacement is planned, so `duro` (Aug 21, 2023 – Oct 18, 2024) is now a
    finished historical dataset. One last check before calling it final: look
