@@ -465,6 +465,10 @@ public pages. `app/access.py` says which page needs which level. Today only
 the About page is public: publishing anything derived from the Duro or
 CWQT data waits on the project lead (see "Operating notes" above). To
 publish a page, change its level to `'public'` in `access.py`.
+The viewer list page ("Who can see this") stays separate from the public
+Privacy page (decided 2026-11-11): it shows real email addresses, so it
+stays admin-only, while Privacy has to be open to anyone for Google
+sign-in. Privacy describes the list in general terms instead.
 
 ```bash
 cd data_import
