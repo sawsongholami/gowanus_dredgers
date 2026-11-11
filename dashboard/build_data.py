@@ -33,11 +33,9 @@ OUT = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data', 'dashboar
 # that wants the numbers.
 OUT_JS = OUT.replace('.json', '.js')
 
-# EPA Beach Action Value for Enterococcus, single sample: 110 MPN/100 mL.
-# Above this a beach would be posted as unsafe for swimming.
-SWIM_THRESHOLD_MPN = 110
-# NY State chronic standard for dissolved oxygen in Class SD waters: 5 mg/L.
-DO_STANDARD_MG_L = 5.0
+# Water quality standards: one copy, in app/standards.py, shared with the app.
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', 'app'))
+from standards import DO_STANDARD_MG_L, SWIM_THRESHOLD_MPN  # noqa: E402
 
 
 def _from_database():

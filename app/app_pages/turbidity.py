@@ -46,9 +46,13 @@ lines = alt.Chart(df).mark_line(strokeWidth=2).encode(
 )
 st.altair_chart(lines, width='stretch')
 site_map.show({'RTA1 stretch': site_map.ZONES['RTA1'], 'RTA2 stretch': site_map.ZONES['RTA2']},
-              label='Map: the two stretches of canal',
-              note='The dots are monitoring sites inside each stretch, to show where the stretch '
-                   "is. The turbidity buoys' own positions aren't on file.")
+              label='Map: the two stretches of canal and the buoys charted',
+              buoys={'RTA1 ambient buoy': 'RTA1 stretch', 'RTA2 ambient buoy': 'RTA2 stretch'},
+              note='Small dots are monitoring sites inside each stretch, to show where it is. The '
+                   'large dots are the two ambient buoys charted above, placed from where the '
+                   "cleanup's weekly reports describe them: during RTA1 in the eastern end of the "
+                   'Fourth St Turning Basin, and during RTA2 between Union St and Carroll St bridges, '
+                   'mostly just north of Carroll St Bridge (it was moved a few times there).')
 
 st.caption('RTA1 and RTA2 are different stretches of the canal, monitored one after the other with '
            'different buoys, so they are kept as two lines. Only the "ambient" station, which both '

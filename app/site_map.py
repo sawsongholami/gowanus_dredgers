@@ -3,8 +3,9 @@
 SITES is the centre of each site's GPS box. The boxes themselves are defined
 in data_import/duro.py (SITE_BOXES, from the Duro Data Dictionary); this is a
 copy, because the app can't import the loaders. If a box changes there,
-change it here. Two CWQT sites, Lowlands and Dentons Pond, have no box and so
-no place on the map yet.
+change it here. Two CWQT sites have no box: Lowlands is placed from the
+project lead's pin (2026-11-11); Dentons Pond has no place on the map yet (its
+outfall is somewhere near Whole Foods; the lead is asking the sampler).
 """
 
 import pandas as pd
@@ -36,6 +37,8 @@ SITES = {
     'Sanitation TB': (40.669263, -73.998635),
     'GD Bunker': (40.667623, -74.000155),
     'Mouth': (40.667040, -74.002775),
+    # CWQT only, no Duro box: a pin from the project lead, not a box centre.
+    'Lowlands': (40.674319, -73.996460),
 }
 
 # EPA cleanup zone of each site, north to south (db/schema.sql, site_zones).
@@ -47,6 +50,16 @@ ZONES = {
     'RTA3': ['South of Hamilton Bridge', 'Sanitation TB', 'GD Bunker', 'Mouth'],
 }
 
+# The turbidity buoys charted on the turbidity page, placed from the cleanup's
+# weekly reports, which describe positions in words, so these are approximate.
+# RTA1 (Aug 2023 - Apr 2024): "the eastern end of TB4" (Fourth St Turning Basin).
+# RTA2: between Union St and Carroll St bridges, moved a few times; mostly at or
+# about 50-80 ft north of Carroll St Bridge, which is where this puts it.
+BUOYS = {
+    'RTA1 ambient buoy': (40.67480, -73.98930),
+    'RTA2 ambient buoy': (40.67836, -73.98925),
+}
+
 _OTHER = [138, 137, 132, 110]   # sites this figure doesn't use: recessive gray
 
 
@@ -54,12 +67,14 @@ def _rgb(hex_color):
     return [int(hex_color[i:i + 2], 16) for i in (1, 3, 5)]
 
 
-def show(groups, note=None, label='Map: where this was measured', expanded=False):
+def show(groups, note=None, label='Map: where this was measured', expanded=False, buoys=None):
     """An expander holding the canal map, with this figure's sites picked out.
 
     groups: {legend label: [site names]}. Each group gets a series color, in
     order, so a map can match its chart's lines. Every other site is a small
     gray dot. Site names are the display form ('Second St'), as on the pages.
+    buoys: {name in BUOYS: group label}, drawn as larger ringed markers in
+    that group's color.
     """
     colors = charts.series()
     rows, unplaced, legend = [], [], []
@@ -78,6 +93,11 @@ def show(groups, note=None, label='Map: where this was measured', expanded=False
         if site not in used:
             rows.append({'site': site, 'group': 'Not part of this figure', 'lat': lat, 'lon': lon,
                          'color': _OTHER, 'radius': 14})
+    group_color = {g: colors[i % len(colors)] for i, g in enumerate(groups)}
+    for name, group in (buoys or {}).items():
+        lat, lon = BUOYS[name]
+        rows.append({'site': f'{name} (approximate)', 'group': group, 'lat': lat, 'lon': lon,
+                     'color': _rgb(group_color[group]) + [255], 'radius': 45})
     # Gray first, so the highlighted dots draw on top.
     df = pd.DataFrame(rows).sort_values('radius')
 
@@ -89,6 +109,8 @@ def show(groups, note=None, label='Map: where this was measured', expanded=False
                               get_line_color=[255, 255, 255], line_width_min_pixels=1, pickable=True)],
             tooltip={'text': '{site}\n{group}'},
         ), height=380)
+        if buoys:
+            legend.append('Large dots: the ambient buoy of each stretch (approximate)')
         legend.append(f'<span style="color:{charts.REFERENCE}">&#9679;</span> Other monitoring sites')
         st.caption(' &nbsp; '.join(legend), unsafe_allow_html=True)
         if unplaced:
