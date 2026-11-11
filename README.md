@@ -634,13 +634,18 @@ Empty tables and what fills them:
    new instrument arrives, check its file format against the two Duro
    formats in "Data quirks" before reusing `duro.py`.
 9. **`turbidity` union view** — done (2026-11-03); see the views above.
-10. **Automation** — `.github/workflows/daily_load.yml` runs the five
+10. **Automation** — `.github/workflows/daily_load.yml` runs the seven
    loaders whose sources are online (cwqt, turbidity_rta2, weather,
-   tide_predictions, observations) every day at 10:00 UTC, which also
-   keeps the free Supabase project from pausing. Free on a public repo.
+   tide_predictions, observations, advisories, harbor_survey) every day at
+   10:00 UTC, which also keeps the free Supabase project from pausing.
+   Free on a public repo.
    It needs the four `.env` values as repository secrets, and GitHub only
    runs a schedule from the default branch. A failed loader fails the run
-   and GitHub emails the owner. duro and turbidity_rta1 still run by hand:
+   and GitHub emails the owner. Since 2026-11-11 every loader downloads
+   through `data_import/web.py`, which retries timeouts and temporary
+   server errors (waiting 0, 10, 20, 40 s) and gives each download a time
+   limit, after an Open-Meteo timeout failed that day's weather step.
+   duro and turbidity_rta1 still run by hand:
    their inputs are files downloaded into `data/`. GitHub switches off a
    public repo's schedules after 60 days without a commit (it emails
    first; one click turns it back on). Credentials are

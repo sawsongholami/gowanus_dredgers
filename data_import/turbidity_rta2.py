@@ -28,9 +28,9 @@ import re
 
 import pandas as pd
 import pdfplumber
-import requests
 
 import apply_schema
+import web
 import write_to_db
 
 TABLE_NAME = 'turbidity_rta2'
@@ -61,7 +61,7 @@ TIME_RE = re.compile(r'^\d{1,2}:\d{2}(:\d{2})?$')
 
 
 def list_report_urls() -> list[str]:
-    resp = requests.get(MONITORING_URL, headers=HEADERS)
+    resp = web.get(MONITORING_URL, headers=HEADERS)
     resp.raise_for_status()
     urls = sorted(set(REPORT_URL_RE.findall(resp.text)))
     if not urls:
@@ -77,7 +77,7 @@ def download_new(urls: list[str]) -> list[pl.Path]:
         path = DIR_PDF / url.rsplit('/', 1)[1]
         if not path.exists():
             print(f'  downloading {path.name}')
-            resp = requests.get(url, headers=HEADERS)
+            resp = web.get(url, headers=HEADERS)
             resp.raise_for_status()
             path.write_bytes(resp.content)
         paths.append(path)

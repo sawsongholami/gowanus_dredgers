@@ -18,10 +18,10 @@ import io
 
 import numpy as np
 import pandas as pd
-import requests
 
 import apply_schema
 import duro
+import web
 import write_to_db
 
 TABLE_NAME = 'observations'
@@ -76,7 +76,7 @@ FINAL_COLS = [
 
 
 def download_responses() -> pd.DataFrame:
-    resp = requests.get(CSV_URL)
+    resp = web.get(CSV_URL)
     is_html = resp.content[:100].lstrip().lower().startswith(b'<')
     if resp.status_code != 200 or is_html:
         raise RuntimeError(

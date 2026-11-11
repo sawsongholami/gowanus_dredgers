@@ -30,10 +30,10 @@ import argparse
 import io
 
 import pandas as pd
-import requests
 from sqlalchemy import text
 
 import apply_schema
+import web
 import write_to_db
 
 TABLE_NAME = 'waterbody_advisories'
@@ -45,7 +45,7 @@ COLUMNS = ['sheet_row', 'check_date', 'checked_at', 'area', 'on_advisory', 'advi
 
 
 def download() -> pd.DataFrame:
-    resp = requests.get(CSV_URL, timeout=60)
+    resp = web.get(CSV_URL, timeout=60)
     resp.raise_for_status()
     if 'text/csv' not in resp.headers.get('content-type', ''):
         raise RuntimeError('The Advisory Tracker did not come back as CSV; is it still shared '

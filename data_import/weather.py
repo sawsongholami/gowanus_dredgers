@@ -29,9 +29,9 @@ import argparse
 import datetime as dt
 
 import pandas as pd
-import requests
 
 import apply_schema
+import web
 import write_to_db
 
 TABLE_NAME = 'weather'
@@ -81,7 +81,7 @@ def latest_stored():
 
 
 def fetch(start: dt.date, end: dt.date) -> pd.DataFrame:
-    resp = requests.get(API_URL, params={
+    resp = web.get(API_URL, params={
         'latitude': LATITUDE,
         'longitude': LONGITUDE,
         'start_date': start.isoformat(),

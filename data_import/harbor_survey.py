@@ -31,9 +31,9 @@ import io
 
 import numpy as np
 import pandas as pd
-import requests
 
 import apply_schema
+import web
 import write_to_db
 
 TABLE_NAME = 'harbor_survey'
@@ -77,7 +77,7 @@ TEXT_COLS = {'obs_id', 'station', 'sample_date', 'sample_time', 'weather'}
 
 def download() -> pd.DataFrame:
     params = {'$select': ','.join(COLUMN_MAP), '$where': WHERE, '$limit': 100000}
-    resp = requests.get(URL, params=params, timeout=120)
+    resp = web.get(URL, params=params, timeout=120)
     resp.raise_for_status()
     return pd.read_csv(io.StringIO(resp.text), dtype=str)
 
