@@ -11,8 +11,10 @@ which succeeded.
 
 import traceback
 
+import advisories
 import cwqt
 import duro
+import harbor_survey
 import observations
 import tide_predictions
 import turbidity_rta1
@@ -27,6 +29,8 @@ LOADERS = [
     ('Open-Meteo hourly weather -> weather', weather),
     ('NOAA tide predictions -> tide_predictions', tide_predictions),
     ('Observation survey -> observations', observations),
+    ('Advisory Tracker -> waterbody_advisories', advisories),
+    ('DEP Harbor Survey -> harbor_survey', harbor_survey),
 ]
 
 

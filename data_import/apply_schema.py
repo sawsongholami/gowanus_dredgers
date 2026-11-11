@@ -10,6 +10,7 @@ run it directly after editing schema.sql to push a change on its own:
 
 import pathlib as pl
 
+import sites
 import write_to_db
 
 SCHEMA_PATH = pl.Path(__file__).parent.parent / 'db' / 'schema.sql'
@@ -25,6 +26,8 @@ def apply():
     for statement in statements:
         write_to_db.run_sql(statement)
     print(f'Applied {len(statements)} statements from {SCHEMA_PATH.name}.')
+    # site_zones reads the sites table, so keep it in step with db/sites.csv.
+    sites.main()
 
 
 if __name__ == '__main__':

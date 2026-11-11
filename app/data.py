@@ -243,16 +243,14 @@ def daily_measures():
                  WHERE date <= current_date AND rain_mm IS NOT NULL""").assign(measure=names[5]),
         _read("""SELECT date, avg_temp_c AS value FROM daily_weather
                  WHERE date <= current_date AND avg_temp_c IS NOT NULL""").assign(measure=names[6]),
+        # Needs the app's grant on tide_predictions (data_import/apply_app_grants.py).
+        # No fallback: a missing grant should fail loudly, not hide tides for the
+        # six hours this result is cached.
+        _read("""SELECT predicted_at::date AS date, max(height_m) AS value
+                 FROM tide_predictions
+                 WHERE tide_type = 'H' AND predicted_at::date <= current_date
+                 GROUP BY 1""").assign(measure=names[7]),
     ]
-    try:
-        parts.append(_read("""SELECT predicted_at::date AS date, max(height_m) AS value
-                              FROM tide_predictions
-                              WHERE tide_type = 'H' AND predicted_at::date <= current_date
-                              GROUP BY 1""").assign(measure=names[7]))
-    except (sa.exc.DBAPIError, pd.errors.DatabaseError):
-        # The app's login hasn't been granted the tide table yet
-        # (db/app_reader.sql): leave tides out rather than break the page.
-        pass
     out = pd.concat(parts, ignore_index=True)
     out['date'] = pd.to_datetime(out['date'])
     out['value'] = out['value'].astype(float).round(2)
