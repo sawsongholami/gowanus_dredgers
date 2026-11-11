@@ -28,9 +28,9 @@ import io
 
 import numpy as np
 import pandas as pd
-import requests
 
 import apply_schema
+import web
 import write_to_db
 
 TABLE_NAME = 'cwqt'
@@ -79,7 +79,7 @@ FINAL_COLS = [
 
 
 def _download(url: str, what: str) -> bytes:
-    resp = requests.get(url)
+    resp = web.get(url)
     if resp.status_code != 200 or resp.content[:100].lstrip().lower().startswith(b'<'):
         raise RuntimeError(
             f'Could not download {what}. The sheet must be shared as '

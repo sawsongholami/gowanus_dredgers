@@ -22,9 +22,9 @@ import argparse
 import datetime as dt
 
 import pandas as pd
-import requests
 
 import apply_schema
+import web
 import write_to_db
 
 TABLE_NAME = 'tide_predictions'
@@ -39,7 +39,7 @@ FINAL_COLS = ['predicted_at', 'height_m', 'tide_type', 'station']
 
 def fetch_year(begin: dt.date, end: dt.date) -> pd.DataFrame:
     """One request. NOAA limits a predictions range to about a year."""
-    resp = requests.get(API_URL, params={
+    resp = web.get(API_URL, params={
         'product': 'predictions',
         'application': 'gowanus_dredgers',
         'datum': 'MLLW',
