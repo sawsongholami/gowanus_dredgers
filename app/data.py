@@ -48,6 +48,12 @@ MEASURES = {
                                         'what': 'Daily average from a weather model (Open-Meteo)'},
     'Highest high tide (m, predicted)': {'mark': 'line', 'log': False,
                                         'what': 'The higher of the day\'s predicted high tides at Gowanus Bay (NOAA)'},
+    'Dissolved oxygen, city survey (mg/L)': {'mark': 'point', 'log': False,
+                                        'what': 'Average of the day\'s near-surface samples, canal stations '
+                                                '(NYC DEP Harbor Survey)'},
+    'Enterococcus, city survey (per 100 mL)': {'mark': 'point', 'log': True,
+                                        'what': 'Geometric mean of the day\'s near-surface samples, canal '
+                                                'stations (NYC DEP Harbor Survey)'},
 }
 
 # How long a chart's data is reused before re-querying. The loaders run by
@@ -170,6 +176,23 @@ def enterococcus():
     return df
 
 
+@st.cache_data(ttl=DATA_TTL, show_spinner="Loading the city's Harbor Survey...")
+def harbor_survey():
+    """NYC DEP's Harbor Survey samples at the canal stations, near-surface:
+    one row per sample with station, date, dissolved oxygen (the CTD profiler
+    where it ran, else the Winkler titration), Enterococcus and DEP's
+    dry/wet call. A separate programme from CWQT and the Dredgers' sonde."""
+    df = _read("""
+        SELECT station, sample_date AS date,
+               coalesce(top_do_ctd_mg_l, top_do_winkler_mg_l) AS do_mg_l,
+               top_enterococci AS enterococci, weather
+        FROM harbor_survey
+    """)
+    df['date'] = pd.to_datetime(df['date'])
+    df['year'] = df['date'].dt.year
+    return df
+
+
 @st.cache_data(ttl=DATA_TTL, show_spinner='Loading dissolved oxygen...')
 def oxygen_by_site():
     df = _read("""
@@ -250,6 +273,12 @@ def daily_measures():
                  FROM tide_predictions
                  WHERE tide_type = 'H' AND predicted_at::date <= current_date
                  GROUP BY 1""").assign(measure=names[7]),
+        _read("""SELECT sample_date AS date, avg(coalesce(top_do_ctd_mg_l, top_do_winkler_mg_l)) AS value
+                 FROM harbor_survey WHERE coalesce(top_do_ctd_mg_l, top_do_winkler_mg_l) IS NOT NULL
+                 GROUP BY 1""").assign(measure=names[8]),
+        _read("""SELECT sample_date AS date, exp(avg(ln(top_enterococci))) AS value
+                 FROM harbor_survey WHERE top_enterococci > 0
+                 GROUP BY 1""").assign(measure=names[9]),
     ]
     out = pd.concat(parts, ignore_index=True)
     out['date'] = pd.to_datetime(out['date'])

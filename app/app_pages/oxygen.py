@@ -1,6 +1,7 @@
 """Dissolved oxygen by site, from the Duro sonde."""
 
 import altair as alt
+import pandas as pd
 import streamlit as st
 
 import access
@@ -66,3 +67,49 @@ st.dataframe(
         'last_day': 'Last reading',
     },
 )
+
+# --- The city's Harbor Survey ---------------------------------------------------
+sections.heading("How does the city's own survey compare?")
+st.markdown("**Dissolved oxygen near the surface, every measurement since 2008.** The city's "
+            'Department of Environmental Protection samples the canal from a boat at fixed stations, '
+            'about once a month, as part of its Harbor Survey. Each aqua dot is one of those samples; '
+            "each blue dot is one day's average from the Dredgers' sonde. The dashed line is the "
+            f'{data.DO_STANDARD_MG_L:g} mg/L standard.')
+hs = data.harbor_survey()
+hs = hs[hs.do_mg_l.notna() & (hs.date >= '2008-01-01')]
+daily = data.daily_measures()
+sonde = daily[daily.measure == list(data.MEASURES)[1]]
+SONDE, CITY = "Dredgers' sonde", 'City Harbor Survey'
+both = pd.concat([
+    sonde.assign(source=SONDE, station='all sites')[['date', 'value', 'source', 'station']],
+    hs.assign(source=CITY, value=hs.do_mg_l)[['date', 'value', 'source', 'station']],
+], ignore_index=True)
+if len(both):
+    colors = charts.series()
+    dots = alt.Chart(both).mark_circle(size=40, opacity=0.65).encode(
+        x=alt.X('date:T', title=None),
+        y=alt.Y('value:Q', title='Dissolved oxygen near the surface (mg/L)'),
+        color=alt.Color('source:N', title=None, legend=alt.Legend(orient='top', labelLimit=0),
+                        scale=alt.Scale(domain=[SONDE, CITY], range=[colors[0], colors[charts.CITY_SURVEY]])),
+        tooltip=[alt.Tooltip('date:T', format='%Y-%m-%d'), 'source:N', 'station:N',
+                 alt.Tooltip('value:Q', title='mg/L', format='.2f')],
+    )
+    std_line = charts.threshold_rule(data.DO_STANDARD_MG_L, f'{data.DO_STANDARD_MG_L:g} mg/L standard')
+    st.altair_chart(dots + std_line, width='stretch')
+    same = (sonde.set_index('date').value.rename('sonde')
+            .to_frame().join(hs.groupby('date').do_mg_l.mean().rename('city'), how='inner'))
+    note = (f'On the {len(same)} days both measured, the sonde averaged {same.sonde.mean():.1f} mg/L '
+            f'and the city survey {same.city.mean():.1f} mg/L. ' if len(same) else '')
+    st.caption(f'{note}Of the city samples shown, {(hs.do_mg_l < data.DO_STANDARD_MG_L).mean():.0%} were '
+               f'below {data.DO_STANDARD_MG_L:g} mg/L. The city samples at five canal stations, from Butler '
+               'St to the mouth, in the daytime; it also measures near the bottom, not shown here. '
+               'Source: NYC DEP Harbor Survey, NYC Open Data.')
+    with st.expander('The numbers, by year'):
+        by_year = hs.groupby('year').agg(samples=('do_mg_l', 'size'), mean_do=('do_mg_l', 'mean'),
+                                         below=('do_mg_l', lambda v: (v < data.DO_STANDARD_MG_L).mean()))
+        st.dataframe(by_year.reset_index(), hide_index=True, column_config={
+            'year': st.column_config.NumberColumn('Year', format='%d'),
+            'samples': 'City samples',
+            'mean_do': st.column_config.NumberColumn('Average (mg/L)', format='%.1f'),
+            'below': st.column_config.NumberColumn(f'Share below {data.DO_STANDARD_MG_L:g}', format='percent'),
+        })

@@ -24,7 +24,8 @@ import access  # noqa: E402
 import data  # noqa: E402
 
 ENTRY = str(APP_DIR / 'streamlit_app.py')
-LOADERS = ('enterococcus', 'oxygen_by_site', 'turbidity_weekly', 'daily_measures', 'viewers')
+LOADERS = ('enterococcus', 'oxygen_by_site', 'turbidity_weekly', 'daily_measures', 'viewers',
+           'harbor_survey')
 PRIVATE_PAGES = ('bacteria', 'oxygen', 'turbidity', 'explore', 'viewers')
 
 
@@ -47,6 +48,9 @@ def _fake_frames():
         'turbidity_weekly': pd.DataFrame({
             'week': pd.to_datetime(['2023-08-07', '2024-09-02']), 'median_ntu': [6.3, 7.1],
             'p90_ntu': [12.0, 15.5], 'n': [600, 200], 'phase': ['RTA1', 'RTA2']}),
+        'harbor_survey': pd.DataFrame({
+            'station': ['GC4', 'GC6', 'GC4'], 'date': dates, 'do_mg_l': [4.1, 6.0, None],
+            'enterococci': [20.0, 300.0, 10.0], 'weather': ['dry', 'wet', 'dry'], 'year': dates.year}),
         'viewers': pd.DataFrame({'email': ['a@example.com'], 'role': ['admin'],
                                  'note': [None], 'added_at': [pd.Timestamp('2026-11-03')]}),
     }

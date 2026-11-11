@@ -4,9 +4,13 @@ import altair as alt
 import pandas as pd
 import streamlit as st
 
-# Categorical slots 1 and 2 of the validated default palette, in fixed order.
-# Dark mode uses the same hues stepped for the dark surface, not a flip.
-_SERIES = {'light': ['#2a78d6', '#eb6834'], 'dark': ['#3987e5', '#d95926']}
+# Categorical slots 1-3 of the validated default palette, in fixed order
+# (the first three pass the colour-blindness checks as a set). Dark mode uses
+# the same hues stepped for the dark surface, not a flip. Slot 3 (aqua) is
+# always the city's Harbor Survey; it is low-contrast on white, so charts
+# using it carry a legend and a table view.
+_SERIES = {'light': ['#2a78d6', '#eb6834', '#1baf7a'], 'dark': ['#3987e5', '#d95926', '#199e70']}
+CITY_SURVEY = 2   # index of the Harbor Survey's colour in series()
 REFERENCE = '#8a8984'   # threshold and standard lines: recessive gray
 
 

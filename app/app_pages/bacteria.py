@@ -258,6 +258,47 @@ st.caption('Sites were sampled in different years and in different numbers, so a
            'samples can rank high or low by chance. ' + RATING_NOTE.replace('**Rating**', 'Rating'))
 site_map.show({'Sampled for bacteria': sorted(df.site.unique())})
 
+# --- The city's Harbor Survey ---------------------------------------------------
+sections.heading("Does the city's own survey agree?")
+st.markdown('**Yearly geometric mean, CWQT and the city.** The city\'s Department of Environmental '
+            'Protection also counts Enterococcus in the canal, about once a month from a boat, as part '
+            'of its Harbor Survey. Orange is CWQT\'s yearly geometric mean (the bars in the first chart); '
+            f'aqua is the city\'s. The dashed orange line is the {gm_standard} MPN geometric-mean standard.')
+hs = data.harbor_survey()
+hs = hs[hs.enterococci > 0]
+CWQT, CITY = 'CWQT (volunteers)', 'City Harbor Survey'
+compare = pd.concat([
+    yearly.assign(source=CWQT)[['year', 'geo_mean', 'source']],
+    hs.groupby('year').enterococci.agg(data.geo_mean).rename('geo_mean').reset_index().assign(source=CITY),
+], ignore_index=True)
+compare = compare[compare.year >= min(years)] if len(years) else compare
+if len(hs) and len(compare):
+    colors = charts.series()
+    lines = alt.Chart(compare).mark_line(point=alt.OverlayMarkDef(size=60), strokeWidth=2).encode(
+        x=year_x,
+        y=alt.Y('geo_mean:Q', scale=alt.Scale(type='log'), title='Geometric mean (MPN/100 mL, log scale)'),
+        color=alt.Color('source:N', title=None, legend=alt.Legend(orient='top', labelLimit=0),
+                        scale=alt.Scale(domain=[CWQT, CITY], range=[geo_color, colors[charts.CITY_SURVEY]])),
+        tooltip=['year:O', 'source:N', alt.Tooltip('geo_mean:Q', title='geometric mean', format=',.0f')],
+    )
+    st.altair_chart(lines + gm_rule, width='stretch')
+    cwqt_day = df.groupby('date').mpn.agg(data.geo_mean).rename('cwqt')
+    city_day = hs.groupby('date').enterococci.agg(data.geo_mean).rename('city')
+    same = cwqt_day.to_frame().join(city_day, how='inner')
+    if len(same):
+        st.caption(f'On the {len(same)} days both programmes sampled, CWQT\'s geometric mean was '
+                   f'{data.geo_mean(same.cwqt):,.0f} MPN and the city\'s {data.geo_mean(same.city):,.0f}. '
+                   'They sample different spots, depths and times of day (the city near the surface '
+                   'mid-channel from a boat, CWQT from the bank), so their counts differ even on the '
+                   'same day. Source: NYC DEP Harbor Survey, NYC Open Data.')
+    with st.expander('The numbers, by year'):
+        wide = compare.pivot(index='year', columns='source', values='geo_mean').reset_index()
+        st.dataframe(wide, hide_index=True, column_config={
+            'year': st.column_config.NumberColumn('Year', format='%d'),
+            CWQT: st.column_config.NumberColumn(CWQT + ' (MPN)', format='%.0f'),
+            CITY: st.column_config.NumberColumn(CITY + ' (MPN)', format='%.0f'),
+        })
+
 st.caption('Source: Citizens\' Water Quality Testing programme (SwimmableNYC and the Billion Oyster '
            f'Project). Standards: New York State bathing-beach rules (10 NYCRR Subpart 6-2), '
            f'{threshold} MPN/100 mL for a single sample and {gm_standard} for a 30-day geometric mean.')
