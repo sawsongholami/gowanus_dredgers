@@ -408,6 +408,15 @@ The controls below are sized to that reality.
   also means file deletions and schema drops happen without a prompt.
   Use a mode that asks before destructive steps, or ask the agent to
   state what it is about to delete and why it is recoverable.
+- **Workflow files are edited on GitHub, not pushed.** The saved GitHub
+  token has no `workflow` scope, so any push that touches
+  `.github/workflows/` is rejected. That's a deliberate choice
+  (2026-11-11): edit workflow files directly on GitHub rather than give
+  the token more rights. An agent keeps workflow edits out of its
+  commits, shows the exact change to make on GitHub, then checks
+  `origin/main` matches.
+- **"Commit and merge"** means open a pull request (`gh pr create`) and
+  merge it (`gh pr merge --merge`).
 - **The bus factor is the biggest real risk, not a breach.** The
   failure mode for a volunteer project is that the one person who
   understands the pipeline moves on and the org drifts back to
