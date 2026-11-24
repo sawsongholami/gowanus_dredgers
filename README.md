@@ -450,6 +450,19 @@ quietly undo it; here every build reruns it, the script fails the build if
 the file moves, and `tests/test_tab_icon.py` checks the same. The worst
 case is the old behaviour.
 
+**Look and navigation** (2026-11-10). The Dredgers' logo
+(`app/assets/`, from gowanusdredgers.org) sits top-left with the
+dashboard's title beside it, and links to the Dredgers' site; the sidebar
+ends with links to the Dredgers and Urban Data Response. The sidebar menu
+is drawn by hand (Streamlit's own page list is hidden) so the open page's
+box can list its sections as links. Pages write section headings with
+`sections.heading()` (`app/sections.py`), which draws the heading and
+records it for the menu, so a renamed heading updates its link by itself.
+The logo size, the title beside it and the menu spacing are CSS overrides
+of Streamlit's own styles in `streamlit_app.py`; if a Streamlit upgrade
+renames the elements they target, the sidebar falls back to plainer looks
+rather than breaking, but check it after upgrading.
+
 **What's in it** (reworked 2026-11-10 after the team's first review).
 Each page is framed as a question and explains its charts in plain
 language: *Is the canal safe to swim in?* (Enterococcus by year with each
@@ -710,6 +723,13 @@ Empty tables and what fills them:
     member, Supabase project member, Google Cloud project owner) so the
     dashboard survives a handover; longer term, move them under a
     Gowanus Dredgers organisation account.
+15. **Link the GitHub repo from the dashboard?** (not asked yet). It's
+    public and would show how every number is computed. Ask the project
+    lead together with item 14, since moving the repo to a Dredgers or UDR
+    account would change the link. Before linking: add a license (with
+    none, others may read the code but not reuse it; MIT for the code,
+    with a note that the data belongs to its sources), and scan the full
+    git history for secrets and personal data.
 
 ## Drive sources already ruled out (audited 2026-09-16)
 
